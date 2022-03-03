@@ -1,0 +1,1 @@
+cdb: node bot.js
