@@ -1,0 +1,14 @@
+{
+	"name": "Bot/Website Development",
+	"id": "331397604825104385",
+	"owner": "160424636369207296",
+	"karmaRoles": [
+		{
+			"milestone": 0,
+			"role": "empty",
+			"default": false
+		}
+	],
+	"isCakeDays": true,
+	"isKarma": true
+}

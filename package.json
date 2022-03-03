@@ -1,0 +1,22 @@
+{
+  "name": "cake-day-bot",
+  "version": "1.0.0",
+  "description": "A bot made to bring reddit Cake Days to discord.",
+  "main": "bot.js",
+  "scripts": {
+    "test": "node bot.js"
+  },
+  "keywords": [
+    "Cake",
+    "Day"
+  ],
+  "author": "sselesUssecnirP",
+  "license": "MIT",
+  "dependencies": {
+    "@discordjs/rest": "^0.3.0",
+    "adm-zip": "^0.5.9",
+    "ascii-table": "^0.0.9",
+    "discord-api-types": "^0.27.3",
+    "discord.js": "^13.6.0"
+  }
+}

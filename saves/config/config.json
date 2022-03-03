@@ -1,0 +1,16 @@
+{
+    "botName": "Cake Day",
+    "version": "1.0.0",
+    "owner": 160424636369207296,
+    "approved": [],
+    "blocked": [],
+    "botEmojis": {
+        "upvotes": ["<:upvote:947126624208445513>", "<:downvote:947126624338456606>"]
+    },
+    "prefix": "cdb!",
+    "keywords": [],
+    "specKeywords": [],
+    "meanKeywords": [],
+    "niceKeywords": [],
+    "banKeywords": []
+}
