@@ -36,7 +36,7 @@ module.exports = client => {
         console.log(lcommands.toString())
     })();
 
-    (async () => {
+    /*(async () => {
         let files;
         let json = [];
         let commands;
@@ -99,5 +99,5 @@ module.exports = client => {
                 }
             });
         });
-    })();
+    })()*/
 }
