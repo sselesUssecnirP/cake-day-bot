@@ -23,10 +23,6 @@ const client = new Client({
             {
                 name: `${config.prefix} | Cake Day ${config.version}`,
                 type: 'LISTENING'
-            },
-            {
-                name: `users and giving away free karma.`,
-                type: `LISTENING`
             }
         ],
         afk: false
