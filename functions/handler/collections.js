@@ -1,9 +1,10 @@
 const { Collection } = require("discord.js")
 const { readdirSync } = require('fs')
-const config = require('../../saves/config/config.json')
-const token = process.env.TOKEN || require('../../saves/config/token.json')
-
-module.exports = client => {
+const secret = process.env.secret || require('../../saves/config/secret.json');
+const config = require('../../saves/config/config.json');
+const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
+const { getFromDB, pushToDB } = require('../basic/basic')
+module.exports = async client => {
 
     client.events = new Collection;
     client.manualEvents = new Collection;
@@ -16,9 +17,35 @@ module.exports = client => {
     client.GuildSaves = new Collection;
 
     // Setup
-    client.config.set('config', config)
-    client.config.set('TOKEN', token)
+    client.config.set('config', config);
+    client.config.set('TOKEN', secret.TOKEN);
+    client.config.set('sql', secret.sql)
 
+    const users = await getFromDB({ design: 'saves', view: 'user' });
+    const guilds = await getFromDB({ design: 'saves', view: 'guild' });
+    users.rows.forEach((doc, ind) => {
+        client.UserSaves.set(doc.key, doc.value);
+    });
+    guilds.rows.forEach(async (doc, ind, arr) => {
+        client.GuildSaves.set(doc.key, doc.value);
+        if (ind == arr.length - 1) {
+            let log = await db.get(doc.id);
+            console.log(log)
+        }
+    });
+    /* 
+    
+    Grab a specific save:
+    usersusersdb = usersdb.rows.filter(f => f.key == key)[0]
+    
+    */
+
+    //console.log(`============== DB Request ==============`)
+    //console.log(users)
+    //console.log(`============== DB Request ==============`)
+    //console.log(guilds)
+    //console.log(`============== DB Request ==============`)
+    /*
     readdirSync('./saves/GuildSaves/').filter(f => f.endsWith('.json')).forEach(file => {
 
         let fileId = file.slice(0, -5)
@@ -34,4 +61,5 @@ module.exports = client => {
         
         client.UserSaves.set(`${fileId}`, content)
     })
+    */
 }

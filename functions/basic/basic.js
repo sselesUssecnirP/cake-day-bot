@@ -14,11 +14,8 @@ const func = {
    * @param {string} format A format string. i.e (en-US by default) for MONTH/DAY/YEAR.
    * @returns {string} The string value returned will be a formatted date (en-US by default) without a timestamp.
    */
-  formatDate(date = new Date(), format = 'en-US') {
-    let string = date.toLocaleString(format, { timeZone: 'America/New_York' })
-    string.split(',')
-
-    return string[1]
+  formatDate(date = new Date(), format = 'en-US', timeZone = 'America/New_York') {
+    return date.toLocaleString(format, { timeZone: timeZone }).split(',')[0]
   },
   
   /**
@@ -85,6 +82,28 @@ const func = {
   }
 
   return arg;
+  },
+  /**
+   * @name getFromDB
+   * @param  {Object} opts { design: '', view: '' }
+   * @returns 
+   */
+  getFromDB: async (opts) => {
+    const secret = require('../../saves/config/secret.json');
+    const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
+    let body = await db.view(opts.design, opts.view);
+    return body;
+
+  },
+  /**
+   * @name pushToDB
+   * @param  {Object} opts { _id: '', _rev: '', data: {} }
+   */
+  pushToDB: async (opts) => {
+    const secret = require('../../saves/config/secret.json');
+    const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
+    db.insert({ _id: opts._id, _rev: opts._rev, data: opts.data });
+
   }
 }
 

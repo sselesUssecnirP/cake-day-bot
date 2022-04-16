@@ -24,12 +24,12 @@ module.exports = {
                 let command = args.shift();
                 let cmd = await client.lcommands.get(command);
                 
-                console.log(`Arguments: ${args}\nCommand: ${command}`)
+                console.log(`Arguments: ${args}Command: ${command}`)
 
                 if (command.length === 0) return;
 
                 if (!cmd)
-                    cmd = await client.commands.get(client.aliases.get(command));
+                    cmd = await client.commands.get(await client.aliases.get(command));
             
                 if (cmd.category !== 'owner' || cmd.category !== 'moderation')
                     cmd.run(client, msg, args);

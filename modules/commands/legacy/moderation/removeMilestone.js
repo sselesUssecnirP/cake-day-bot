@@ -1,4 +1,6 @@
-
+const { getFromDB, pushToDB } = require('../../../functions/basic/basic');
+const secret = require('../../../saves/config/secret.json');
+const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
 
 module.exports = {
     // Name of the command (legacy)
@@ -24,6 +26,9 @@ module.exports = {
             if (gSave.karmaRoles.length == 0) gSave.karmaRoles[0] = {milestone: 0, role: 'empty', default: false}
             gSave.karmaRoles.sort((a, b) => a - b)
 
+            let guildsdb = await getFromDB({ design: 'saves', view: 'guild' }).rows.filter(f => f.key == gSave.id)[0];
+            let _rev = await db.get(guildsdb.id)._rev;
+            pushToDB({ id:guildsdb.id, rev: _rev, data: gSave });
             msg.reply({ content: 'Successfully removed the milestone.', ephemeral: true })
             client.GuildSaves.set(msg.guild.id, gSave)
         } else {

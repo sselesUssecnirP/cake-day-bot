@@ -7,7 +7,7 @@ const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 
 module.exports = client => {
-    const token = process.env.TOKEN || require('../../saves/config/token.json').TOKEN;
+    const token = process.env.TOKEN || require('../../saves/config/secret.json').TOKEN;
 
 
     (async () => {
@@ -36,7 +36,7 @@ module.exports = client => {
         console.log(lcommands.toString())
     })();
 
-    /*(async () => {
+    (async () => {
         let files;
         let json = [];
         let commands;
@@ -99,5 +99,5 @@ module.exports = client => {
                 }
             });
         });
-    })()*/
+    })()
 }

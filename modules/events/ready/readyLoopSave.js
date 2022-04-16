@@ -1,4 +1,6 @@
-const { writeFileSync } = require('fs')
+const { getFromDB, pushToDB } = require('../../../functions/basic/basic');
+const secret = require('../../../saves/config/secret.json');
+const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
  
 module.exports = {
     // Name of the event
@@ -15,12 +17,18 @@ module.exports = {
 
         const saveLoop = () => {
 
-            client.GuildSaves.each(gS => {
-                writeFileSync(`./saves/GuildSaves/${gS.id}.json`, JSON.stringify(gS, null, '\t'))
+            client.GuildSaves.each(async gS => {
+                let guildsdb = await getFromDB({ design: 'saves', view: 'guild' })
+                usersdb = usersdb.rows.filter(f => f.key == gS.id)[0];
+                let _rev = await db.get(guildsdb.id)._rev;
+                pushToDB({ id: guildsdb.id, rev: _rev, data: gS });
             });
 
-            client.UserSaves.each(uS => {
-                writeFileSync(`./saves/UserSaves/${uS.id}.json`, JSON.stringify(uS, null, '\t'))
+            client.UserSaves.each(async uS => {
+                let usersdb = await getFromDB({ design: 'saves', view: 'user' })
+                usersdb = usersdb.rows.filter(f => f.key == uS.id)[0];
+                let _rev = await db.get(usersdb.id)._rev;
+                pushToDB({ id: usersdb.id, rev: _rev, data: uS });
             });
         };
 

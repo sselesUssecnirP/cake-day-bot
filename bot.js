@@ -1,5 +1,5 @@
 const { Client, Intents } = require('discord.js');
-const token = process.env.TOKEN || require('./saves/config/token.json').TOKEN;
+const token = process.env.TOKEN || require('./saves/config/secret.json').TOKEN;
 const config = require('./saves/config/config.json');
 
 const handlers = ["collections", "events", "commands"]
@@ -29,8 +29,8 @@ const client = new Client({
     }
 });
 
-handlers.forEach(async handler => {
-    await require(`./functions/handler/${handler}`)(client)
+handlers.forEach(handler => {
+    require(`./functions/handler/${handler}`)(client)
 })
 
 client.events.each(e => e.run(client))
