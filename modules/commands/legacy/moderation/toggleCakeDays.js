@@ -1,5 +1,5 @@
-const { getFromDB, pushToDB } = require('../../../functions/basic/basic');
-const secret = require('../../../saves/config/secret.json');
+const { getFromDB, pushToDB } = require('../../../../functions/basic/basic');
+const secret = require('../../../../saves/config/secret.json');
 const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
 
 module.exports = {
