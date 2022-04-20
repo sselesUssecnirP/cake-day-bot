@@ -53,7 +53,11 @@ module.exports = {
             
             if (lastMsg.messages.filter(f => f.channelId == msg.channel.id)[0]) {
                 if (lastMsg.messages.filter(f => f.channelId == msg.channel.id)[0].msg == msg.author.id)
-                    return;
+                    if (msg.content.length < 150) return;
+                    else {
+                        let msgInd = lastMsg.messages.findIndex(f => f.channelId == msg.channel.id)
+                        lastMsg.messages[msgInd].msg = msg.author.id
+                    }
                 else {
                     let msgInd = lastMsg.messages.findIndex(f => f.channelId == msg.channel.id)
                     lastMsg.messages[msgInd].msg = msg.author.id
