@@ -22,20 +22,20 @@ module.exports = {
         let rChannel = msg.channelId
         let rMessage = msg.id
 
-        msg.react(emojis[0])
-        msg.react(emojis[1])
+        await msg.react(emojis[0])
+        await msg.react(emojis[1])
 
         let messageReactionAdd = async (reaction, user) => {
 
-            uSave = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == reaction.message.author.id)[0].value
-            gSave = (await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == reaction.message.guildId)[0].value
+            uSave = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == msg.author.id)[0].value
+            gSave = (await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == msg.guildId)[0].value
 
             if (day1 >= nextAdd) {
                 client.off('messageReactionAdd', messageReactionAdd);
                 return;
             }   
 
-            if (msg.author.id == reaction.message.author.id) return;
+            if (msg.author.id == msg.author.id) return;
             if (reaction.message.partial) await reaction.message.fetch();
             if (reaction.partial) await reaction.fetch();
             if (user.bot) return;
@@ -105,7 +105,7 @@ module.exports = {
                     }
                 }
 
-                let usersdb = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == reaction.message.author.id)[0];
+                let usersdb = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == msg.author.id)[0];
                 let _rev = (await db.get(usersdb.id))._rev || false;
                 await pushToDB({ _id: usersdb.id, _rev: _rev, data: uSave, isUser: true })
 
@@ -115,7 +115,7 @@ module.exports = {
 
         let messageReactionRemove = async (reaction, user) => {
 
-            uSave = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == reaction.message.author.id)[0].value
+            uSave = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == msg.author.id)[0].value
             gSave = (await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == reaction.message.guildId)[0].value
 
             if (day1 >= nextAdd) {
@@ -127,7 +127,7 @@ module.exports = {
             let rChannel = msg.channelId
             let rMessage = msg.id
 
-            if (msg.author.id == reaction.message.author.id) return;
+            if (msg.author.id == msg.author.id) return;
             if (reaction.message.partial) await reaction.message.fetch();
             if (reaction.partial) await reaction.fetch();
             if (user.bot) return;
@@ -194,7 +194,7 @@ module.exports = {
                     }
                 }
 
-                let usersdb = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == reaction.message.author.id)[0];
+                let usersdb = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == msg.author.id)[0];
                 let _rev = (await db.get(usersdb.id))._rev || false;
                 await pushToDB({ _id: usersdb.id, _rev: _rev, data: uSave, isUser: true })
             }

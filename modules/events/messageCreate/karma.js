@@ -18,6 +18,8 @@ module.exports = {
             let gSave;
             let uSave;
 
+            if (!msg.inGuild()) return console.log(`Message is not a guild.`);
+
             if (config.blocked.some(i => i == msg.author.id)) return;
             let prefix = await client.config.get('config').prefix
             if (msg.content.toLowerCase().startsWith(prefix)) return;
@@ -46,12 +48,16 @@ module.exports = {
                     messages: []
                 };
 
-                db.insert({ isLastMsg: true, data: lastMsg })
+                await db.insert({ isLastMsg: true, data: lastMsg })
             };
             
             if (lastMsg.messages.filter(f => f.channelId == msg.channel.id)[0]) {
-                lastMsg.messages.filter(f => f.channelId == msg.channel.id)[0].msg = msg.author.id;
-                return;
+                if (lastMsg.messages.filter(f => f.channelId == msg.channel.id)[0].msg == msg.author.id)
+                    return;
+                else {
+                    let msgInd = lastMsg.messages.findIndex(f => f.channelId == msg.channel.id)
+                    lastMsg.messages[msgInd].msg = msg.author.id
+                }
             } else {
 
                 lastMsg.messages.push({
@@ -64,8 +70,11 @@ module.exports = {
             let lastmsgdb = (await getFromDB({ design: 'saves', view: 'lastmsg' })).rows.filter(f => f.key == msg.guild.id)[0];
             let _rev3 = (await db.get(lastmsgdb.id))._rev || false;
             await pushToDB({ _id: lastmsgdb.id, _rev: _rev3, data: lastMsg, isLastMsg: true });
+            
+
 
             if ((await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == msg.guild.id).length == 0) {
+                console.log(`gSave not detected -- karma.js`)
 
                 let def = {
                     name: msg.guild.name,
@@ -83,24 +92,24 @@ module.exports = {
                     isKarma: true
                 }
 
-                db.insert({ isGuild: true, data: def });
-
                 gSave = def;
+                await db.insert({ isGuild: true, data: gSave });
             } else {
-                //console.log(`gSave detected! -- karma.js`)
+                console.log(`gSave detected! -- karma.js`)
 
                 gSave = (await getFromDB({ design: 'saves', view: 'guild'})).rows.filter(f => f.key == msg.guild.id)[0].value
 
                 //console.log(`${JSON.stringify(gSave, null, '\t')}`)
             }
 
-            if ((await getFromDB({ design: 'saves', view: 'user'})).rows.filter(f => f.key == msg.author.id).length >= 1) {
-                //console.log(`uSave detected! -- karma.js`)
+            if ((await getFromDB({ design: 'saves', view: 'user'})).rows.filter(f => f.key == msg.author.id)[0]) {
+                console.log(`uSave detected! -- karma.js`)
 
                 uSave = (await getFromDB({ design: 'saves', view: 'user'})).rows.filter(f => f.key == msg.author.id)[0].value
 
                 //console.log(`${JSON.stringify(uSave, null, '\t')}`)
             } else {
+                console.log(`uSave not detected -- karma.js`)
 
                 let newUSave = {
                     id: msg.author.id,
@@ -114,9 +123,8 @@ module.exports = {
                     posKarma: 0
                 }
 
-                db.insert({ isUser: true, data: newUSave });
-
                 uSave = newUSave;
+                await db.insert({ isUser: true, data: uSave });
             }
 
             
