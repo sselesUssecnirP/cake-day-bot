@@ -43,13 +43,13 @@ module.exports = {
         .setTimestamp(new Date())
 
         if (fun.length !== 0)
-            embed.addField(`Fun`, fun.join(''))
+            embed.addField(`Fun`, fun.join('\n'))
         if (info.length !== 0)
-            embed.addField(`Info`, info.join(''))
+            embed.addField(`Info`, info.join('\n'))
         if (moderation.length !== 0)
-            embed.addField(`Moderation`, moderation.join(''))
+            embed.addField(`Moderation`, moderation.join('\n'))
         if (owner.length !== 0)
-            embed.addField(`Owner`, owner.join(''))
+            embed.addField(`Owner`, owner.join('\n'))
 
         msg.channel.send({ content: `Help has arrived!`, embeds: [embed] })
     }

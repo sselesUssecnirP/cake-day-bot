@@ -1,4 +1,5 @@
-const { formatDate, formatDateTime, getFromDB, pushToDB } = require('../../../functions/basic/basic');
+const { formatDate, formatDateTime } = require('../../../functions/funcs/basic')
+const { getFromDB, pushToDB } = require('../../../functions/funcs/database');
 const secret = require('../../../saves/config/secret.json');
 const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
 const config = require('../../../saves/config/config.json')
@@ -15,13 +16,26 @@ module.exports = {
     
         client.on('messageCreate', async msg => {
 
-            if (!client.GuildSaves.some(g => g.id == msg.guild.id)) return;
-            if (!client.UserSaves.some(u => u.guildCakeDays.some(uGCD => uGCD.id == msg.guild.id))) return;
+            let uSave;
+            let gSave;
+
+            if ((await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == msg.guild.id)[0]) {
+                gSave = (await getFromDB({ design: 'saves', view: 'guild'})).rows.filter(f => f.key == msg.guild.id)[0].value
+            }
+            else {
+                return;
+            }
+
+            if ((await getFromDB({ design: 'saves', view: 'user'})).rows.filter(f => f.key == msg.author.id)[0]) {
+                uSave = (await getFromDB({ design: 'saves', view: 'user'})).rows.filter(f => f.key == msg.author.id)[0].value
+            } else {
+                return;
+            }
+
+            if (uSave.guildCakeDays !== undefined || uSave.guildCakeDays !== [])
+                if (!uSave.guildCakeDays.some(uGCD => uGCD.id == msg.guild.id)) return;
             if (config.blocked.some(i => i == msg.author.id)) return;
             if (msg.author.bot) return;
-
-            let uSave = client.UserSaves.get(msg.author.id);
-            let gSave = client.GuildSaves.get(msg.guild.id);
 
             if (gSave.exemptChannels.some(i => i == msg.channel.id)) return;
 
@@ -58,9 +72,8 @@ module.exports = {
 
             let usersdb = await getFromDB({ design: 'saves', view: 'user' })
             usersdb = usersdb.rows.filter(f => f.key == msg.author.id)[0];
-            let _rev = await db.get(usersdb.id)._rev
-            pushToDB({ id: usersdb.id, rev: _rev, data: usersdb.value })
-            client.UserSaves.set(msg.author.id, uSave);
+            let _rev = await db.get(usersdb.id)._rev || false
+            await pushToDB({ _id: usersdb.id, _rev: _rev, data: uSave, isUser: true })
         });
     }
 }

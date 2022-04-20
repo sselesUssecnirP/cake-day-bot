@@ -1,4 +1,6 @@
-
+const { getFromDB, pushToDB } = require('../../../functions/funcs/basic');
+const secret = require('../../../saves/config/secret.json');
+const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
 
 module.exports = {
     // Name of the event
@@ -10,17 +12,11 @@ module.exports = {
     // The event's run function (what the event does)
     run: async (client, msg) => {
 
-        const { getFromDB, pushToDB } = require('../../../functions/basic/basic');
-        const secret = require('../../../saves/config/secret.json');
-        const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
+        let uSave = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == msg.author.id)[0].value
+        let gSave = (await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == msg.guild.id)[0].value
 
-        let day1 = await client.UserSaves.get(msg.author.id)
-        day1 = Date.parse(day1['karmaAdd']['added'])
-        let nextAdd = await client.UserSaves.get(msg.author.id)
-        nextAdd = Date.parse(nextAdd['karmaAdd']['nextAdd'])
-
-        let uSave = client.UserSaves.get(msg.author.id)
-        let gSave = client.GuildSaves.get(msg.guild.id)
+        let day1 = Date.parse(uSave['karmaAdd']['karmaAdd']);
+        let nextAdd = Date.parse(uSave['karmaAdd']['nextAdd']);
 
         let emojis = require('../../../saves/config/config.json').botEmojis.upvotes
         let rChannel = msg.channelId
@@ -28,11 +24,18 @@ module.exports = {
 
         msg.react(emojis[0])
         msg.react(emojis[1])
-    
-        client.on('messageReactionAdd', async (reaction, user) => {
 
-            if (day1 >= nextAdd) return;
+        let messageReactionAdd = async (reaction, user) => {
 
+            uSave = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == reaction.message.author.id)[0].value
+            gSave = (await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == reaction.message.guildId)[0].value
+
+            if (day1 >= nextAdd) {
+                client.off('messageReactionAdd', messageReactionAdd);
+                return;
+            }   
+
+            if (msg.author.id == reaction.message.author.id) return;
             if (reaction.message.partial) await reaction.message.fetch();
             if (reaction.partial) await reaction.fetch();
             if (user.bot) return;
@@ -42,54 +45,89 @@ module.exports = {
             if (reaction.message.channel.id == rChannel) {
 
                 if (reaction.emoji.toString() === emojis[0]) {
-                    console.log(`Awarded 1 posKarma to ${msg.member.displayName}`)
-                    uSave.posKarma += 1
+                    console.log(`Awarded 1 posKarma to ${msg.member.displayName}\nPosKarma: ${uSave.posKarma}\nNegKarma: ${uSave.negKarma}`)
+                    uSave.posKarma += 1;
+                    let gcds = uSave.guildCakeDays.filter(f => f.guildId == msg.guild.id)[0]
+                    let indGCDS = uSave.guildCakeDays.findIndex(f => f == gcds);
+                    uSave.guildCakeDays[indGCDS].posKarma += 1;
+                    uSave.guildCakeDays[indGCDS].karma = uSave.guildCakeDays[indGCDS].posKarma - uSave.guildCakeDays[indGCDS].negKarma;
+
                     uSave.karma = uSave.posKarma - uSave.negKarma
-                    uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).posKarma += 1
-                    uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).karma = await uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).posKarma - await uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).negKarma
+                    uSave.guildCakeDays[indGCDS] = gcds
+                    console.log(`PosKarma: ${uSave.posKarma}\nNegKarma: ${uSave.negKarma}`)
                 } else if (reaction.emoji.toString() === emojis[1]) {
                     console.log(`Awarded 1 negKarma to ${msg.member.displayName}`)
-                    uSave.negKarma += 1
+                    uSave.negKarma += 1;
+                    let gcds = uSave.guildCakeDays.filter(f => f.guildId == msg.guild.id)[0]
+                    let indGCDS = uSave.guildCakeDays.findIndex(f => f == gcds);
+                    uSave.guildCakeDays[indGCDS].negKarma += 1;
+                    uSave.guildCakeDays[indGCDS].karma = uSave.guildCakeDays[indGCDS].posKarma - uSave.guildCakeDays[indGCDS].negKarma;
+
                     uSave.karma = uSave.posKarma - uSave.negKarma
-                    uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).negKarma += 1
-                    uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).karma = await uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).posKarma - await uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).negKarma
+                    uSave.guildCakeDays[indGCDS] = gcds
                 }
 
                 if (gSave.karmaRoles[0].default == true) {
-                    let nextRole = await gSave.karmaRoles.filter(r => msg.member.roles.cache.has(r.role))[0] || false
-                    let previousRole = false;
-                    if (nextRole) {
-                        previousRole = nextRole;
-                        nextRole = gSave.karmaRoles.indexOf(nextRole);
-                        nextRole++;
-                    }  else {
-                        nextRole = 0;
-                    }
+                    let currentRole;
+                    gSave.karmaRoles.forEach(kr => {
+                        msg.member.roles.cache.each(cr => {
+                            if (cr.id == kr.role) {
+                                currentRole = cr.id;
+                            }
+                        });
+                    });
 
-                    nextRole = gSave.karmaRoles[nextRole]
-                    if (uSave.karma >= nextRole['milestone']) {
-                        msg.member.roles.add(nextRole['role'])
-                        if (previousRole) msg.member.roles.remove(previousRole['role'])
+                    let nextRole;
+                    nextRoleInd
+                    gSave.karmaRoles.forEach(kr => {
+                        if (kr.role == currentRole) {
+                            nextRole = gSave.karmaRoles.findIndex(f => f.role == kr.role) + 1;
+                            nextRoleInd = nextRole;
+                            if (gSave.karmaRoles[nextRole])
+                                nextRole = gSave.karmaRoles[nextRole].role;
+                            else
+                                nextRole = false;
+                        }
+                    });
+
+                    let guildInd;
+                    uSave.guildCakeDays.forEach(g => {
+                        if (g.guildId == msg.guild.id)
+                            guildInd = uSave.guildCakeDays.findIndex(f => f == g)
+                    })
+
+                    if (nextRole) {
+                        if (gSave.karmaRoles[nextRoleInd].milestone <= uSave.guildCakeDays[guildInd].karma)
+                            reaction.message.member.roles.add(nextRole, `${reaction.message.author.username} has achieved ${gSave.karmaRoles[nextRoleInd].milestone} karma!`);
+                        if (nextRoleInd !== 0) {
+                            reaction.message.member.roles.remove(currentRole, `${reaction.message.author.username} has achived a new milestone! Removing previous role...`)
+                        }
                     }
                 }
 
-                let usersdb = await getFromDB({ design: 'saves', view: 'user' })
-                usersdb = usersdb.rows.filter(f => f.key == uSave.id)[0];
-                let _rev = await db.get(usersdb.id)._rev;
-                pushToDB({ id: usersdb.id, rev: _rev, data: uSave });
-                client.UserSaves.set(msg.author.id, uSave)
+                let usersdb = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == reaction.message.author.id)[0];
+                let _rev = (await db.get(usersdb.id))._rev || false;
+                await pushToDB({ _id: usersdb.id, _rev: _rev, data: uSave, isUser: true })
+
                 console.log(`Saved ${msg.member.displayName}'s new data.`)
             }
-        });
+        };
 
-        client.on('messageReactionRemove', async (reaction, user) => {
+        let messageReactionRemove = async (reaction, user) => {
 
-            if (day1 >= nextAdd) return;
+            uSave = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == reaction.message.author.id)[0].value
+            gSave = (await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == reaction.message.guildId)[0].value
+
+            if (day1 >= nextAdd) {
+                client.off('messageReactionRemove', messageReactionRemove);
+                return;
+            }
 
             let emojis = await client.config.get('config')['botEmojis']['upvotes']
             let rChannel = msg.channelId
             let rMessage = msg.id
 
+            if (msg.author.id == reaction.message.author.id) return;
             if (reaction.message.partial) await reaction.message.fetch();
             if (reaction.partial) await reaction.fetch();
             if (user.bot) return;
@@ -99,39 +137,71 @@ module.exports = {
             if (reaction.message.channel.id == rChannel) {
 
                 if (reaction.emoji.toString() === emojis[0]) {
-                    uSave.posKarma -= 1
+                    uSave.posKarma -= 1;
+                    let gcds = uSave.guildCakeDays.filter(f => f.guildId == msg.guild.id)[0]
+                    let indGCDS = uSave.guildCakeDays.findIndex(f => f == gcds);
+                    uSave.guildCakeDays[indGCDS].posKarma -= 1;
+                    uSave.guildCakeDays[indGCDS].karma = uSave.guildCakeDays[indGCDS].posKarma - uSave.guildCakeDays[indGCDS].negKarma;
+
                     uSave.karma = uSave.posKarma - uSave.negKarma
-                    uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).posKarma -= 1
-                    uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).karma = await uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).posKarma - await uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).negKarma
+                    uSave.guildCakeDays[indGCDS] = gcds
                 } else if (reaction.emoji.toString() === emojis[1]) {
-                    uSave.negKarma -= 1
+                    uSave.negKarma -= 1;
+                    let gcds = uSave.guildCakeDays.filter(f => f.guildId == msg.guild.id)[0]
+                    let indGCDS = uSave.guildCakeDays.findIndex(f => f == gcds);
+                    uSave.guildCakeDays[indGCDS].negKarma -= 1;
+                    uSave.guildCakeDays[indGCDS].karma = uSave.guildCakeDays[indGCDS].posKarma - uSave.guildCakeDays[indGCDS].negKarma;
+
                     uSave.karma = uSave.posKarma - uSave.negKarma
-                    uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).negKarma -= 1
-                    uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).karma = await uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).posKarma - await uSave.guildCakeDays.filter(g => g.guildId == reaction.message.guild.id).negKarma
+                    uSave.guildCakeDays[indGCDS] = gcds
                 }
 
                 if (gSave.karmaRoles[0].default == true) {
-                    let nextRole = await gSave.karmaRoles.filter(r => msg.member.roles.cache.has(r.role))[0] || false
-                    let previousRole = false;
-                    if (!nextRole) {
-                        previousRole = nextRole;
-                        nextRole = gSave.karmaRoles.indexOf(nextRole);
-                        nextRole--;
-                    
-                        nextRole = gSave.karmaRoles[nextRole]
-                        if (uSave.karma >= nextRole['milestone']) {
-                            msg.member.roles.add(nextRole['role'])
-                            if (previousRole) msg.member.roles.remove(previousRole['role'])
+                    let currentRole;
+                    gSave.karmaRoles.forEach(kr => {
+                        msg.member.roles.cache.each(cr => {
+                            if (cr.id == kr.role) {
+                                currentRole = cr.id;
+                            }
+                        });
+                    });
+
+                    let nextRole;
+                    nextRoleInd
+                    gSave.karmaRoles.forEach(kr => {
+                        if (kr.role == currentRole) {
+                            nextRole = gSave.karmaRoles.findIndex(f => f.role == kr.role) - 1;
+                            nextRoleInd = nextRole;
+                            if (gSave.karmaRoles[nextRole])
+                                nextRole = gSave.karmaRoles[nextRole].role;
+                            else
+                                nextRole = false;
+                        }
+                    });
+
+                    let guildInd;
+                    uSave.guildCakeDays.forEach(g => {
+                        if (g.guildId == msg.guild.id)
+                            guildInd = uSave.guildCakeDays.findIndex(f => f == g)
+                    })
+
+                    if (nextRole) {
+                        if (gSave.karmaRoles[nextRoleInd].milestone > uSave.guildCakeDays[guildInd].karma)
+                            reaction.message.member.roles.add(nextRole, `${reaction.message.author.username} has regressed under ${gSave.karmaRoles[nextRoleInd + 1].milestone} karma!`);
+                        if (nextRoleInd !== 0) {
+                            reaction.message.member.roles.remove(currentRole, `${reaction.message.author.username} has regressed to a previous milestone! Removing previous role...`)
                         }
                     }
                 }
 
-                let usersdb = await getFromDB({ design: 'saves', view: 'user' })
-                usersdb = usersdb.rows.filter(f => f.key == uSave.id)[0];
-                let _rev = await db.get(usersdb.id)._rev;
-                pushToDB({ id: usersdb.id, rev: _rev, data: uSave });
-                client.UserSaves.set(msg.author.id, uSave)
+                let usersdb = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == reaction.message.author.id)[0];
+                let _rev = (await db.get(usersdb.id))._rev || false;
+                await pushToDB({ _id: usersdb.id, _rev: _rev, data: uSave, isUser: true })
             }
-        });
+        };
+    
+        client.on('messageReactionAdd', messageReactionAdd);
+
+        client.on('messageReactionRemove', messageReactionRemove);
     }
 }

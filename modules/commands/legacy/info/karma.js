@@ -1,4 +1,4 @@
-
+const { getFromDB, pushToDB } = require('../../../../functions/funcs/database');
 
 module.exports = {
     // Name of the command (legacy)
@@ -14,7 +14,7 @@ module.exports = {
     // The run function of the command
     run: async (client, msg, args) => {
         
-        let uSave = client.UserSaves.get(msg.author.id);
+        let uSave = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == msg.author.id)[0].value;
         let uGSave = uSave.guildCakeDays.filter(s => s.guildId == msg.guild.id)[0];
 
         msg.reply({

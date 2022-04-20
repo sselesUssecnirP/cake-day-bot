@@ -3,7 +3,7 @@ const { readdirSync } = require('fs')
 const secret = process.env.secret || require('../../saves/config/secret.json');
 const config = require('../../saves/config/config.json');
 const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
-const { getFromDB, pushToDB } = require('../basic/basic')
+const { getFromDB, pushToDB } = require('../funcs/basic')
 module.exports = async client => {
 
     client.events = new Collection;
@@ -13,14 +13,12 @@ module.exports = async client => {
     client.lcommands = new Collection;
     client.aliases = new Collection;
     client.config = new Collection;
-    client.UserSaves = new Collection;
-    client.GuildSaves = new Collection;
 
     // Setup
     client.config.set('config', config);
     client.config.set('TOKEN', secret.TOKEN);
-    client.config.set('sql', secret.sql)
 
+    /*    
     const users = await getFromDB({ design: 'saves', view: 'user' });
     const guilds = await getFromDB({ design: 'saves', view: 'guild' });
     users.rows.forEach((doc, ind) => {
@@ -33,7 +31,8 @@ module.exports = async client => {
             console.log(log)
         }
     });
-    /* 
+
+    /*
     
     Grab a specific save:
     usersusersdb = usersdb.rows.filter(f => f.key == key)[0]

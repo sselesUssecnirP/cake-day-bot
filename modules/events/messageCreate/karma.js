@@ -1,4 +1,4 @@
-const { getFromDB, pushToDB } = require('../../../functions/basic/basic');
+const { getFromDB, pushToDB } = require('../../../functions/funcs/database');
 const secret = require('../../../saves/config/secret.json');
 const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
 const config = require('../../../saves/config/config.json');
@@ -15,16 +15,28 @@ module.exports = {
         
         client.on('messageCreate', async msg => {
             
+            let gSave;
+            let uSave;
 
             if (config.blocked.some(i => i == msg.author.id)) return;
             let prefix = await client.config.get('config').prefix
             if (msg.content.toLowerCase().startsWith(prefix)) return;
             if (msg.author.bot) return;
 
+            /*
+            if (msg.channel.messages.fetch({ limit: 1 }).then(message => {
+                message = message.first()
+                if (!message) return false;
+                if (msg.content.length < 85 && message.author.id == msg.author.id)
+                    return true;
+                else
+                    return false;
+            })) return;
+            */
 
-            let uSave;
+            if ((await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == msg.guild.id).length == 0) {
+                console.log(`gSave not detected! -- karma.js`)
 
-            if (!client.GuildSaves.has(msg.guild.id)) {
                 let def = {
                     name: msg.guild.name,
                     id: msg.guild.id,
@@ -41,20 +53,26 @@ module.exports = {
                     isKarma: true
                 }
 
-                client.GuildSaves.set(msg.guild.id, def);
-
                 db.insert({ isGuild: true, data: def });
+
+                gSave = def;
+            } else {
+                //console.log(`gSave detected! -- karma.js`)
+
+                gSave = (await getFromDB({ design: 'saves', view: 'guild'})).rows.filter(f => f.key == msg.guild.id)[0].value
+
+                //console.log(`${JSON.stringify(gSave, null, '\t')}`)
             }
 
-            let gSave = await client.GuildSaves.get(msg.guild.id);
+            if ((await getFromDB({ design: 'saves', view: 'user'})).rows.filter(f => f.key == msg.author.id).length >= 1) {
+                //console.log(`uSave detected! -- karma.js`)
 
+                uSave = (await getFromDB({ design: 'saves', view: 'user'})).rows.filter(f => f.key == msg.author.id)[0].value
 
-            if (gSave.exemptChannels.some(i => i == msg.channel.id)) return;
-            if (!gSave.isKarma) return;
-
-            if (client.UserSaves.has(msg.author.id)) {
-                uSave = client.UserSaves.get(msg.author.id)
+                //console.log(`${JSON.stringify(uSave, null, '\t')}`)
             } else {
+                console.log(`uSave not detected! -- karma.js`)
+
                 let newUSave = {
                     id: msg.author.id,
                     username: msg.author.username,
@@ -72,20 +90,28 @@ module.exports = {
                 uSave = newUSave;
             }
 
+            
+            if (gSave.exemptChannels.length !== 0)
+                if (gSave.exemptChannels.some(i => i == msg.channel.id)) return;
+            if (!gSave.isKarma) return;
+
             if (!uSave.guildCakeDays.some(v => v.guildId == msg.guild.id)) {
                 uSave.guildCakeDays.push({guildId: msg.guild.id, guildCakeDay: msg.member.joinedAt, cakeDayMsg: false, karma: 0, negKarma: 0, posKarma: 0});
             }
 
             uSave.karmaAdd = { 
                 karmaAdd: new Date(), 
-                nextAdd: new Date().setMilliseconds(new Date().getMilliseconds += 8.64e+7)
+                nextAdd: new Date().setDate(new Date().getDate() + 1)
             }
             
-            let usersdb = await getFromDB({ design: 'saves', view: 'user' })
-            usersdb = usersdb.rows.filter(f => f.key == msg.author.id)[0];
-            let _rev = await db.get(usersdb.id)._rev
-            pushToDB({ id: usersdb.id, rev: _rev, data: uSave });
-            client.UserSaves.set(msg.author.id, uSave);
+            let usersdb = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == msg.author.id)[0];
+            let _rev = (await db.get(usersdb.id))._rev || false;
+            await pushToDB({ _id: usersdb.id, _rev: _rev, data: uSave, isUser: true });
+
+            let guildsdb = (await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == msg.guild.id)[0];
+            let _rev2 = (await db.get(guildsdb.id))._rev || false;
+            await pushToDB({ _id: guildsdb.id, _rev: _rev2, data: gSave, isGuild: true });
+
             client.manualEvents.get('karmaReactionAdd').run(client, msg);
         });
     }

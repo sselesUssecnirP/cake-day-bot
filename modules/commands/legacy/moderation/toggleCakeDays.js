@@ -1,4 +1,4 @@
-const { getFromDB, pushToDB } = require('../../../../functions/basic/basic');
+const { getFromDB, pushToDB } = require('../../../../functions/funcs/database');
 const secret = require('../../../../saves/config/secret.json');
 const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
 
@@ -16,7 +16,7 @@ module.exports = {
     // The run function of the command
     run: async (client, msg, args) => {
         
-        let gSave = await client.GuildSaves.get(msg.guild.id);
+        let gSave = (await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == msg.guild.id)[0].value;
 
         if (gSave.isCakeDays) {
             gSave.isCakeDays = false
@@ -29,7 +29,6 @@ module.exports = {
 
         let guildsdb = await getFromDB({ design: 'saves', view: 'guild' }).rows.filter(f => f.key == gSave.id)[0];
         let _rev = await db.get(guildsdb.id)._rev;
-        pushToDB({ id:guildsdb.id, rev: _rev, data: gSave });
-        client.GuildSaves.set(msg.guild.id, gSave)
+        await pushToDB({ _id: guildsdb.id, _rev: _rev, data: gSave, isGuild: true });
     }
 }
