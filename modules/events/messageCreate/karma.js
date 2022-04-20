@@ -34,15 +34,38 @@ module.exports = {
             })) return;
             */
 
-            let lastMsg = client.guildMessage.get(msg.guild.id) || false;
+            let lastMsg = false;
+            let msgInd = false;
 
-            if (lastMsg)
-                if (lastMsg.author.id == msg.author.id) return;
+            if ((await getFromDB({ design: 'saves', view: 'lastmsg'})).rows.filter(f => f.key == msg.guild.id)[0]) {
+                lastMsg = (await getFromDB({ design: 'saves', view: 'lastmsg'})).rows.filter(f => f.key == msg.guild.id)[0].value;
+            } else {
+
+                lastMsg = {
+                    guildId: msg.guild.id,
+                    messages: []
+                };
+
+                db.insert({ isLastMsg: true, data: lastMsg })
+            };
             
-            client.guildMessage.set(msg.guild.id, msg)
+            if (lastMsg.messages.filter(f => f.channelId == msg.channel.id)[0]) {
+                lastMsg.messages.filter(f => f.channelId == msg.channel.id)[0].msg = msg.author.id;
+                return;
+            } else {
+
+                lastMsg.messages.push({
+                    channelId: msg.channel.id,
+                    msg: msg.author.id
+                });
+            };
+            
+
+            let lastmsgdb = (await getFromDB({ design: 'saves', view: 'lastmsg' })).rows.filter(f => f.key == msg.guild.id)[0];
+            let _rev3 = (await db.get(lastmsgdb.id))._rev || false;
+            await pushToDB({ _id: lastmsgdb.id, _rev: _rev3, data: lastMsg, isLastMsg: true });
 
             if ((await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == msg.guild.id).length == 0) {
-                console.log(`gSave not detected! -- karma.js`)
 
                 let def = {
                     name: msg.guild.name,
@@ -78,7 +101,6 @@ module.exports = {
 
                 //console.log(`${JSON.stringify(uSave, null, '\t')}`)
             } else {
-                console.log(`uSave not detected! -- karma.js`)
 
                 let newUSave = {
                     id: msg.author.id,

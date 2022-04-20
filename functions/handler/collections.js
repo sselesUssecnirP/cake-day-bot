@@ -13,7 +13,7 @@ module.exports = async client => {
     client.lcommands = new Collection;
     client.aliases = new Collection;
     client.config = new Collection;
-    client.guildMessage = new Collection;
+    
     // Setup
     client.config.set('config', config);
     client.config.set('TOKEN', secret.TOKEN);
