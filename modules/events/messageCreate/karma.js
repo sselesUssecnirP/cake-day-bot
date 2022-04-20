@@ -14,7 +14,7 @@ module.exports = {
     run: async (client) => {
         
         client.on('messageCreate', async msg => {
-            
+
             let gSave;
             let uSave;
 
@@ -33,6 +33,13 @@ module.exports = {
                     return false;
             })) return;
             */
+
+            let lastMsg = client.guildMessage.get(msg.guild.id) || false;
+
+            if (lastMsg)
+                if (lastMsg.author.id == msg.author.id) return;
+            
+            client.guildMessage.set(msg.guild.id, msg)
 
             if ((await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == msg.guild.id).length == 0) {
                 console.log(`gSave not detected! -- karma.js`)
