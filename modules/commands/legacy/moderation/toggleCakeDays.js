@@ -1,6 +1,6 @@
 const { getFromDB, pushToDB } = require('../../../../functions/funcs/database');
 const secret = require('../../../../saves/config/secret.json');
-const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
+const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use(secret.sql.database.name);
 
 module.exports = {
     // Name of the command (legacy)
@@ -16,7 +16,7 @@ module.exports = {
     // The run function of the command
     run: async (client, msg, args) => {
         
-        let gSave = (await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == msg.guild.id)[0].value;
+        let gSave = (await getFromDB(secret.sql.database.views.guilds)).rows.filter(f => f.key == msg.guild.id)[0].value;
 
         if (gSave.isCakeDays) {
             gSave.isCakeDays = false
@@ -27,8 +27,8 @@ module.exports = {
             msg.reply({ content: 'Enabled Cake Days.', ephemeral: true })
         }
 
-        let guildsdb = await getFromDB({ design: 'saves', view: 'guild' }).rows.filter(f => f.key == gSave.id)[0];
-        let _rev = await db.get(guildsdb.id)._rev;
-        await pushToDB({ _id: guildsdb.id, _rev: _rev, data: gSave, isGuild: true });
+        let guildsdb = (await getFromDB(secret.sql.database.views.guilds)).rows.filter(f => f.key == gSave.id)[0];
+        let _rev = (await db.get(guildsdb.id))._rev;
+        await pushToDB({ _id: guildsdb.id, _rev: _rev, isGuild: true, data: gSave });
     }
 }

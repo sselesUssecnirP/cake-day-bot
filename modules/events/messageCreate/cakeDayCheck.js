@@ -1,7 +1,7 @@
 const { formatDate, formatDateTime } = require('../../../functions/funcs/basic')
 const { getFromDB, pushToDB } = require('../../../functions/funcs/database');
 const secret = require('../../../saves/config/secret.json');
-const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
+const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use(secret.sql.database.name);
 const config = require('../../../saves/config/config.json')
 
 module.exports = {
@@ -19,7 +19,7 @@ module.exports = {
             let uSave;
             let gSave;
 
-            if ((await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == msg.guild.id)[0]) {
+            if ((await getFromDB(secret.sql.database.views.guilds)).rows.filter(f => f.key == msg.guild.id)[0]) {
                 gSave = (await getFromDB({ design: 'saves', view: 'guild'})).rows.filter(f => f.key == msg.guild.id)[0].value
             }
             else {
@@ -70,10 +70,10 @@ module.exports = {
                 uSave.guildCakeDays.filter(cd => cd.guildId == msg.guild.id)[0].cakeDayMsg = false;
             }
 
-            let usersdb = await getFromDB({ design: 'saves', view: 'user' })
+            let usersdb = await getFromDB(secret.sql.database.views.users)
             usersdb = usersdb.rows.filter(f => f.key == msg.author.id)[0];
             let _rev = await db.get(usersdb.id)._rev || false
-            await pushToDB({ _id: usersdb.id, _rev: _rev, data: uSave, isUser: true })
+            await pushToDB({ _id: usersdb.id, _rev: _rev, isUser: true, data: uSave })
         });
     }
 }

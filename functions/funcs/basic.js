@@ -90,7 +90,7 @@ const func = {
    */
   getFromDB: async (opts) => {
     const secret = require('../../saves/config/secret.json');
-    const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
+    const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use(secret.sql.database.name);
     let body = await db.view(opts.design, opts.view);
     return body;
 
@@ -101,7 +101,7 @@ const func = {
    */
   pushToDB: async (opts) => {
     const secret = require('../../saves/config/secret.json');
-    const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
+    const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use(secret.sql.database.name);
     db.insert({ _id: opts._id, _rev: opts._rev, data: opts.data });
 
   }

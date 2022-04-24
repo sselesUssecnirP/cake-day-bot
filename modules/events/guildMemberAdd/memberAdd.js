@@ -1,6 +1,6 @@
 const { getFromDB, pushToDB } = require('../../../functions/funcs/database');
 const secret = require('../../../saves/config/secret.json');
-const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
+const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use(secret.sql.database.name);
 
 module.exports = {
     // Name of the event
@@ -13,19 +13,19 @@ module.exports = {
     run: async (client) => {
         
         client.on('guildMemberAdd', async (member) => {
-            
 
+            if (member.user.bot) return;
 
-            if (!(await getFromDB({ design: 'saves', view: 'user' })).rows.some(u => u.key == member.id)) {
-                let hasSave = false;
+            if ((await getFromDB(secret.sql.database.views.users)).rows.filter(u => u.key == member.id)[0]) {
+                hasSave = true;
             } else {
-                let hasSave = true;
+                hasSave = false;
             }
 
             if (hasSave) {
-                let uSave = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == member.id)[0].value
+                uSave = (await getFromDB(secret.sql.database.views.users)).rows.filter(f => f.key == member.id)[0].value
             } else {
-                let uSave = {
+                uSave = {
                     id: member.id,
                     username: member.user.username,
                     cakeDay: member.user.createdAt,
@@ -46,10 +46,10 @@ module.exports = {
                 }
             }
 
-            if (!uSave.guildCakeDays.some(u => u.guildId == member.guild.id)) {
-                let hasGCD = false;
+            if (!uSave.guildCakeDays.filter(u => u.guildId == member.guild.id)[0]) {
+                hasGCD = true;
             } else {
-                let hasGCD = true;
+                hasGCD = false;
             }
 
             if (!hasGCD) {
@@ -63,10 +63,10 @@ module.exports = {
                 });
             }
 
-            let usersdb = await getFromDB({ design: 'saves', view: 'user' })
+            let usersdb = await getFromDB(secret.sql.database.views.users)
             usersdb = usersdb.rows.filter(f => f.key == msg.author.id)[0];
             let _rev = await db.get(usersdb.id)._rev || false
-            await pushToDB({ _id: usersdb.id, _rev: _rev, data: uSave, isUser: true })
+            await pushToDB({ _id: usersdb.id, _rev: _rev, isUser: true, data: uSave })
         })
     }
 }

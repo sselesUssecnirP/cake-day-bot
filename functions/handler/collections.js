@@ -2,7 +2,7 @@ const { Collection } = require("discord.js")
 const { readdirSync } = require('fs')
 const secret = process.env.secret || require('../../saves/config/secret.json');
 const config = require('../../saves/config/config.json');
-const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
+const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use(secret.sql.database.name);
 const { getFromDB, pushToDB } = require('../funcs/basic')
 module.exports = async client => {
 
@@ -19,8 +19,8 @@ module.exports = async client => {
     client.config.set('TOKEN', secret.TOKEN);
 
     /*    
-    const users = await getFromDB({ design: 'saves', view: 'user' });
-    const guilds = await getFromDB({ design: 'saves', view: 'guild' });
+    const users = await getFromDB(secret.sql.database.views.users);
+    const guilds = await getFromDB(secret.sql.database.views.guilds);
     users.rows.forEach((doc, ind) => {
         client.UserSaves.set(doc.key, doc.value);
     });

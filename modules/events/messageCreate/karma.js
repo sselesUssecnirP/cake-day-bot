@@ -1,6 +1,5 @@
-const { getFromDB, pushToDB } = require('../../../functions/funcs/database');
+const { getFromDB, pushToDB, getDB } = require('../../../functions/funcs/database');
 const secret = require('../../../saves/config/secret.json');
-const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use('cake_day_bot');
 const config = require('../../../saves/config/config.json');
 
 module.exports = {
@@ -14,6 +13,8 @@ module.exports = {
     run: async (client) => {
         
         client.on('messageCreate', async msg => {
+
+            if (msg.guild.id == 755657350962085888) return;
 
             let gSave;
             let uSave;
@@ -39,8 +40,8 @@ module.exports = {
             let lastMsg = false;
             let msgInd = false;
 
-            if ((await getFromDB({ design: 'saves', view: 'lastmsg'})).rows.filter(f => f.key == msg.guild.id)[0]) {
-                lastMsg = (await getFromDB({ design: 'saves', view: 'lastmsg'})).rows.filter(f => f.key == msg.guild.id)[0].value;
+            if ((await getFromDB(secret.sql.database.views.lastMsg)).rows.filter(f => f.key == msg.guild.id)[0]) {
+                lastMsg = (await getFromDB(secret.sql.database.views.lastMsg)).rows.filter(f => f.key == msg.guild.id)[0].value;
             } else {
 
                 lastMsg = {
@@ -48,12 +49,12 @@ module.exports = {
                     messages: []
                 };
 
-                await db.insert({ isLastMsg: true, data: lastMsg })
+                await pushToDB({ isLastMsg: true, data: lastMsg })
             };
             
             if (lastMsg.messages.filter(f => f.channelId == msg.channel.id)[0]) {
                 if (lastMsg.messages.filter(f => f.channelId == msg.channel.id)[0].msg == msg.author.id)
-                    if (msg.content.length < 150) return;
+                    if (msg.content.length < 150) console.log('bypassed lastMsg') //return;
                     else {
                         let msgInd = lastMsg.messages.findIndex(f => f.channelId == msg.channel.id)
                         lastMsg.messages[msgInd].msg = msg.author.id
@@ -71,13 +72,13 @@ module.exports = {
             };
             
 
-            let lastmsgdb = (await getFromDB({ design: 'saves', view: 'lastmsg' })).rows.filter(f => f.key == msg.guild.id)[0];
-            let _rev3 = (await db.get(lastmsgdb.id))._rev || false;
+            let lastmsgdb = (await getFromDB(secret.sql.database.views.lastMsg)).rows.filter(f => f.key == msg.guild.id)[0];
+            let _rev3 = (await getDB(lastmsgdb.id))._rev || false;
             await pushToDB({ _id: lastmsgdb.id, _rev: _rev3, data: lastMsg, isLastMsg: true });
             
 
 
-            if ((await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == msg.guild.id).length == 0) {
+            if ((await getFromDB(secret.sql.database.views.guilds)).rows.filter(f => f.key == msg.guild.id).length == 0) {
                 console.log(`gSave not detected -- karma.js`)
 
                 let def = {
@@ -97,19 +98,19 @@ module.exports = {
                 }
 
                 gSave = def;
-                await db.insert({ isGuild: true, data: gSave });
+                await pushToDB({ isGuild: true, data: gSave });
             } else {
                 console.log(`gSave detected! -- karma.js`)
 
-                gSave = (await getFromDB({ design: 'saves', view: 'guild'})).rows.filter(f => f.key == msg.guild.id)[0].value
+                gSave = (await getFromDB(secret.sql.database.views.guilds)).rows.filter(f => f.key == msg.guild.id)[0].value
 
                 //console.log(`${JSON.stringify(gSave, null, '\t')}`)
             }
 
-            if ((await getFromDB({ design: 'saves', view: 'user'})).rows.filter(f => f.key == msg.author.id)[0]) {
+            if ((await getFromDB(secret.sql.database.views.users)).rows.filter(f => f.key == msg.author.id)[0]) {
                 console.log(`uSave detected! -- karma.js`)
 
-                uSave = (await getFromDB({ design: 'saves', view: 'user'})).rows.filter(f => f.key == msg.author.id)[0].value
+                uSave = (await getFromDB(secret.sql.database.views.users)).rows.filter(f => f.key == msg.author.id)[0].value
 
                 //console.log(`${JSON.stringify(uSave, null, '\t')}`)
             } else {
@@ -121,14 +122,13 @@ module.exports = {
                     cakeDay: msg.author.createdAt,
                     cakeDayMsg: false,
                     guildCakeDays: [{guildId: msg.guild.id, guildCakeDay: msg.member.joinedAt, cakeDayMsg: false, karma: 0, negKarma: 0, posKarma: 0}],
-                    karmaAdd: false,
                     karma: 0,
                     negKarma: 0,
                     posKarma: 0
                 }
 
                 uSave = newUSave;
-                await db.insert({ isUser: true, data: uSave });
+                await pushToDB({ isUser: true, data: uSave });
             }
 
             
@@ -140,20 +140,27 @@ module.exports = {
                 uSave.guildCakeDays.push({guildId: msg.guild.id, guildCakeDay: msg.member.joinedAt, cakeDayMsg: false, karma: 0, negKarma: 0, posKarma: 0});
             }
 
-            uSave.karmaAdd = { 
-                karmaAdd: new Date(), 
-                nextAdd: new Date().setDate(new Date().getDate() + 1)
+            if (uSave.karmaAdd) {
+                delete uSave.karmaAdd;
+            }
+
+            let mSave = {
+                msgId: msg.id,
+                deleteDate: new Date().setDate(new Date().getDate() + 1)
             }
             
-            let usersdb = (await getFromDB({ design: 'saves', view: 'user' })).rows.filter(f => f.key == msg.author.id)[0];
-            let _rev = (await db.get(usersdb.id))._rev || false;
-            await pushToDB({ _id: usersdb.id, _rev: _rev, data: uSave, isUser: true });
+            let usersdb = (await getFromDB(secret.sql.database.views.users)).rows.filter(f => f.key == msg.author.id)[0];
+            let _rev = (await getDB(usersdb.id))._rev || false;
+            await pushToDB({ _id: usersdb.id, _rev: _rev, isUser: true, data: uSave });
 
-            let guildsdb = (await getFromDB({ design: 'saves', view: 'guild' })).rows.filter(f => f.key == msg.guild.id)[0];
-            let _rev2 = (await db.get(guildsdb.id))._rev || false;
-            await pushToDB({ _id: guildsdb.id, _rev: _rev2, data: gSave, isGuild: true });
+            let guildsdb = (await getFromDB(secret.sql.database.views.guilds)).rows.filter(f => f.key == msg.guild.id)[0];
+            let _rev2 = (await getDB(guildsdb.id))._rev || false;
+            await pushToDB({ _id: guildsdb.id, _rev: _rev2, isGuild: true, data: gSave });
 
-            client.manualEvents.get('karmaReactionAdd').run(client, msg);
+            await pushToDB({ isReactionMsg: true, data: mSave });
+
+            msg.react(config.botEmojis.upvotes[0])
+            msg.react(config.botEmojis.upvotes[1])
         });
     }
 }
