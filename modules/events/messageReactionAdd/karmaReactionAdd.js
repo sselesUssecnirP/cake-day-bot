@@ -140,15 +140,12 @@ module.exports = {
                     });
                     if (roles.length > 0) roles.sort((a, b) => a - b)
     
-                    if (!Array.isArray(roles)) {
+                    if (Array.isArray(roles)) {
                         let role = reaction.message.guild.roles.cache.get(gSave.karmaRoles[roles].role)
                         roles.forEach(r => {
                             reaction.message.member.roles.remove(gSave.karmaRoles[r].role, `${reaction.message.author.username} no longer meets the requirements.`)
                             reaction.message.channel.send(`<@!${reaction.message.author.id}> has deranked from ${reaction.message.guild.roles.cache.get(gSave.karmaRoles[r].role).name}`)
                         });
-    
-                        reaction.message.member.roles.add(role.id, `${reaction.message.author.username} has ranked up to ${role.name}`)
-                        reaction.message.channel.send(`<@!${reaction.message.author.id}> has ranked up to ${role.name}`)
                     }
             }
 
@@ -287,15 +284,12 @@ module.exports = {
                     });
                     if (roles.length > 0) roles.sort((a, b) => a - b)
     
-                    if (!Array.isArray(roles)) {
+                    if (Array.isArray(roles)) {
                         let role = reaction.message.guild.roles.cache.get(gSave.karmaRoles[roles].role)
                         roles.forEach(r => {
                             reaction.message.member.roles.remove(gSave.karmaRoles[r].role, `${reaction.message.author.username} no longer meets the requirements.`)
                             reaction.message.channel.send(`<@!${reaction.message.author.id}> has deranked from ${reaction.message.guild.roles.cache.get(gSave.karmaRoles[r].role).name}`)
                         });
-    
-                        reaction.message.member.roles.add(role.id, `${reaction.message.author.username} has ranked up to ${role.name}`)
-                        reaction.message.channel.send(`<@!${reaction.message.author.id}> has ranked up to ${role.name}`)
                     }
             }
 
