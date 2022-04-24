@@ -15,7 +15,7 @@ module.exports = {
 
         let messageReactionAdd = async (reaction, user) => {
 
-            //if (reaction.message.author.id == reaction.message.author.id) return;
+            if (reaction.message.author.id == reaction.message.author.id) return;
             if (reaction.message.partial) await reaction.message.fetch();
             if (reaction.partial) await reaction.fetch();
             if (user.bot) return;
@@ -64,7 +64,7 @@ module.exports = {
                 console.log(`${reaction.message.author.username} Karma: ${uSave.karma}`)
             }
 
-            if (gSave.karmaRoles[0].default == true) {
+            if (gSave.karmaRoles[0].default == true && !reaction.message.member.permissions.has('MANAGE_GUILD', true)) {
 
                 console.log(`Found Milestones for guild`)
 
@@ -211,7 +211,7 @@ module.exports = {
                 console.log(`${reaction.message.author.username} Karma: ${uSave.karma}`)
             }
 
-            if (gSave.karmaRoles[0].default == true) {
+            if (gSave.karmaRoles[0].default == true && !reaction.message.member.permissions.has('MANAGE_GUILD', true)) {
 
                 console.log(`Found Milestones for guild`)
 
