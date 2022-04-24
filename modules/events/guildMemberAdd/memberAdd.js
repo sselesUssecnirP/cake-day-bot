@@ -64,7 +64,7 @@ module.exports = {
             }
 
             let usersdb = await getFromDB(secret.sql.database.views.users)
-            usersdb = usersdb.rows.filter(f => f.key == msg.author.id)[0];
+            usersdb = usersdb.rows.filter(f => f.key == member.id)[0];
             let _rev = await db.get(usersdb.id)._rev || false
             await pushToDB({ _id: usersdb.id, _rev: _rev, isUser: true, data: uSave })
         })
