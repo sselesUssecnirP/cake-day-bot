@@ -15,9 +15,9 @@ module.exports = {
 
         let messageReactionAdd = async (reaction, user) => {
 
-            if (reaction.message.author.id == reaction.message.author.id) return;
             if (reaction.message.partial) await reaction.message.fetch();
             if (reaction.partial) await reaction.fetch();
+            if (reaction.message.author.id == reaction.message.author.id) return;
             if (user.bot) return;
             if (!reaction.message.guild) return;
 
