@@ -44,6 +44,8 @@ module.exports = {
                     negKarma: 0,
                     posKarma: 0
                 }
+
+                db.insert({ isUser: true, data: uSave })
             }
 
             if (!uSave.guildCakeDays.filter(u => u.guildId == member.guild.id)[0]) {
