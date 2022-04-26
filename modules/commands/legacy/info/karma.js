@@ -1,4 +1,5 @@
 const { getFromDB, pushToDB } = require('../../../../functions/funcs/database');
+const secret = require('../../../../saves/config/secret.json');
 
 module.exports = {
     // Name of the command (legacy)
