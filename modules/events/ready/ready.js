@@ -1,4 +1,7 @@
-
+const { getFromDB, pushToDB, getDB } = require('../../../functions/funcs/database');
+const secret = require('../../../saves/config/secret.json');
+const config = require('../../../saves/config/config.json');
+const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use(secret.sql.database.name);
 
 module.exports = {
     // Name of the event
@@ -13,6 +16,22 @@ module.exports = {
         client.on('ready', () => {
 
             console.log('Cake Day Bot is ready for work!')
+
+            const periodic = async () => {
+
+                let mSaves = (await getFromDB(secret.sql.database.views.reactionMsgs))
+                
+                mSaves.rows.forEach(mSave => {
+                    if (new Date(mSave.value.deleteDate) <= new Date()) {
+                        db.destroy(mSave.id)
+                    }
+                });
+
+
+            }
+
+            setInterval(periodic, 3.6e+6)
+            periodic();
         });
     }
 }
