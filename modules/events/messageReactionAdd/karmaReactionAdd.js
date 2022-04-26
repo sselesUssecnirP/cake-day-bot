@@ -29,7 +29,7 @@ module.exports = {
             gSave = (await getFromDB(secret.sql.database.views.guilds)).rows.filter(f => f.key == reaction.message.guildId)[0].value
             mSave = (await getFromDB(secret.sql.database.views.reactionMsgs)).rows.filter(f => f.value.msgId == reaction.message.id)[0].value
 
-            if (Date.parse(mSave.deletionDate) >= new Date()) {
+            if (new Date(mSave.deletionDate) >= new Date()) {
                 db.destroy((await getFromDB(secret.sql.database.views.reactionMsgs)).rows.filter(f => f.value.msgId == reaction.message.id)[0].id)
                 reaction.message.guild.channels.cache.each(ch => {
                     if (ch.name == 'botlog') {
@@ -173,7 +173,7 @@ module.exports = {
             gSave = (await getFromDB(secret.sql.database.views.guilds)).rows.filter(f => f.key == reaction.message.guildId)[0].value
             mSave = (await getFromDB(secret.sql.database.views.reactionMsgs)).rows.filter(f => f.value.msgId == reaction.message.id)[0].value
 
-            if (Date.parse(mSave.deletionDate) >= new Date()) {
+            if (new Date(mSave.deletionDate) >= new Date()) {
                 db.destroy((await getFromDB(secret.sql.database.views.reactionMsgs)).rows.filter(f => f.value.msgId == reaction.message.id)[0].id)
                 reaction.message.guild.channels.cache.each(ch => {
                     if (ch.name == 'botlog') {

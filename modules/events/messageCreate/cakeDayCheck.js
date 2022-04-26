@@ -43,11 +43,11 @@ module.exports = {
             curDate = curDate.split(/\//g)
             curDate.pop()
             curDate = curDate.join('/')
-            let cakeDay = formatDate(Date.parse(uSave.cakeDay));
+            let cakeDay = formatDate(new Date(uSave.cakeDay));
             cakeDay = cakeDay.split(/\//g)
             cakeDay.pop()
             cakeDay = cakeDay.join('/')
-            let gCakeDay = formatDate(Date.parse(uSave.guildCakeDays.filter(i => i.guildId == msg.guild.id)[0].guildCakeDay));
+            let gCakeDay = formatDate(new Date(uSave.guildCakeDays.filter(i => i.guildId == msg.guild.id)[0].guildCakeDay));
             gCakeDay = gCakeDay.split(/\//g)
             gCakeDay.pop()
             gCakeDay = cakeDay.join('/')
