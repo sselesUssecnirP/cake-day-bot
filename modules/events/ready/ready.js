@@ -23,9 +23,9 @@ module.exports = {
                 
                 mSaves.rows.forEach(mSave => {
                     if (new Date(mSave.value.deleteDate) <= new Date()) {
-                        let theMSave = db.get(mSave.id)
+                        let _rev = (await db.get(mSave.id))._rev
 
-                        db.destroy(mSave.id, theMSave._rev)
+                        db.destroy(mSave.id, _rev)
                     }
                 });
 
