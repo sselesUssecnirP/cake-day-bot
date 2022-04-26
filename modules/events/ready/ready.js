@@ -23,7 +23,7 @@ module.exports = {
                 
                 mSaves.rows.forEach(mSave => {
                     if (new Date(mSave.value.deleteDate) <= new Date()) {
-                        db.destroy(mSave.id)
+                        db.destroy(mSave.id, mSave.doc._rev)
                     }
                 });
 
