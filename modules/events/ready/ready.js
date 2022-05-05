@@ -17,23 +17,24 @@ module.exports = {
 
             console.log('Cake Day Bot is ready for work!')
 
-            const periodic = async () => {
+            const periodic = [
+                async () => {
 
-                let mSaves = (await getFromDB(secret.sql.database.views.reactionMsgs))
-                
-                mSaves.rows.forEach(mSave => {
-                    if (new Date(mSave.value.deleteDate) <= new Date()) {
-                        let _rev = (await db.get(mSave.id))._rev
+                    let mSaves = (await getFromDB(secret.sql.database.views.reactionMsgs))
+                    
+                    mSaves.rows.forEach(mSave => {
+                        if (new Date(mSave.value.deleteDate) <= new Date()) {
+                            //let _rev = (await db.get(mSave.id))._rev
+    
+                           // db.destroy(mSave.id, _rev)
+                        }
+                    });
+     
+                }
+            ]
 
-                        db.destroy(mSave.id, _rev)
-                    }
-                });
-
-
-            }
-
-            setInterval(periodic, 3.6e+6)
-            periodic();
+            setInterval(periodic[0], 3.6e+6)
+            periodic[0]();
         });
     }
 }

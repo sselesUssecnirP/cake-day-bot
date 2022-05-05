@@ -2,7 +2,7 @@
 const { readdirSync, readdir } = require('fs');
 const ascii = require('ascii-table');
 const acommands = new ascii().setHeading("Command (New)", "Load Status");
-const lcommands = new ascii().setHeading("Commands (Legacy)", "Aliases", "Load Status")
+const lcommands = new ascii().setHeading("Commands (Legacy)", "Aliases", "Load Status");
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 
@@ -36,6 +36,8 @@ module.exports = client => {
         console.log(lcommands.toString())
     })();
 
+    /* 
+    
     (async () => {
         let files;
         let json = [];
@@ -97,7 +99,9 @@ module.exports = client => {
                 } catch (error) {
                     console.error(error)
                 }
-            });
+            })();
         });
     })()
+    
+    */
 }

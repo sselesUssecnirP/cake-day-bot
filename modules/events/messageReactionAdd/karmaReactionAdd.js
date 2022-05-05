@@ -17,7 +17,7 @@ module.exports = {
 
             if (reaction.message.partial) await reaction.message.fetch();
             if (reaction.partial) await reaction.fetch();
-            if (reaction.message.author.id == reaction.message.author.id) return;
+            if (user.id == reaction.message.author.id) return;
             if (user.bot) return;
             if (!reaction.message.guild) return;
 
@@ -94,7 +94,7 @@ module.exports = {
                     reaction.message.member.roles.add(role.id, `${reaction.message.author.username} has ranked up to ${role.name}`)
                     reaction.message.channel.send(`<@!${reaction.message.author.id}> has ranked up to ${role.name}`)
                 } else if (!reaction.message.member.roles.cache.has(gSave.karmaRoles[roles].role)) {
-                    let role = reaction.message.guild.roles.cache.get(gSave.karmaRoles[roles].role)
+                    let role = (await reaction.message.guild.roles.cache.get(gSave.karmaRoles[roles].role))
                     gSave.karmaRoles.forEach((kr, index) => {
                         reaction.message.member.roles.cache.each(r => {
                             if (r.id == kr.role) {
@@ -161,7 +161,7 @@ module.exports = {
 
             if (reaction.message.partial) await reaction.message.fetch();
             if (reaction.partial) await reaction.fetch();
-            if (reaction.message.author.id == reaction.message.author.id) return;
+            if (user.id == reaction.message.author.id) return;
             if (user.bot) return;
             if (!reaction.message.guild) return;
 
@@ -191,7 +191,7 @@ module.exports = {
                 let indGCDS = uSave.guildCakeDays.findIndex(f => f == gcds);
                 uSave.guildCakeDays[indGCDS].posKarma -= 1;
                 uSave.guildCakeDays[indGCDS].karma = uSave.guildCakeDays[indGCDS].posKarma - uSave.guildCakeDays[indGCDS].negKarma;
-
+                
                 uSave.karma = uSave.posKarma - uSave.negKarma
                 uSave.guildCakeDays[indGCDS] = gcds
                 console.log(`${reaction.message.author.username} Karma: ${uSave.karma}`)

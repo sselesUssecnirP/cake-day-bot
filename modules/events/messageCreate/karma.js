@@ -14,32 +14,18 @@ module.exports = {
         
         client.on('messageCreate', async msg => {
 
-            if (msg.guild.id == 755657350962085888) return;
-
             let gSave;
             let uSave;
 
             if (!msg.inGuild()) return console.log(`Message is not a guild.`);
 
             if (config.blocked.some(i => i == msg.author.id)) return;
-            let prefix = await client.config.get('config').prefix
-            if (msg.content.toLowerCase().startsWith(prefix)) return;
+            if (msg.content.toLowerCase().startsWith(config.prefix)) return;
             if (msg.author.bot) return;
-
-            /*
-            if (msg.channel.messages.fetch({ limit: 1 }).then(message => {
-                message = message.first()
-                if (!message) return false;
-                if (msg.content.length < 85 && message.author.id == msg.author.id)
-                    return true;
-                else
-                    return false;
-            })) return;
-            */
 
             let lastMsg = false;
             let msgInd = false;
-
+            
             if ((await getFromDB(secret.sql.database.views.lastMsg)).rows.filter(f => f.key == msg.guild.id)[0]) {
                 lastMsg = (await getFromDB(secret.sql.database.views.lastMsg)).rows.filter(f => f.key == msg.guild.id)[0].value;
             } else {
@@ -53,15 +39,16 @@ module.exports = {
             };
             
             if (lastMsg.messages.filter(f => f.channelId == msg.channel.id)[0]) {
-                if (lastMsg.messages.filter(f => f.channelId == msg.channel.id)[0].msg == msg.author.id)
+                if (lastMsg.messages.filter(f => f.channelId == msg.channel.id)[0].msg == msg.author.id) {
                     if (msg.content.length < 150) return;
                     else {
-                        let msgInd = lastMsg.messages.findIndex(f => f.channelId == msg.channel.id)
-                        lastMsg.messages[msgInd].msg = msg.author.id
+                        let msgInd = lastMsg.messages.findIndex(f => f.channelId == msg.channel.id);
+                        lastMsg.messages[msgInd].msg = msg.author.id;
                     }
+                }
                 else {
-                    let msgInd = lastMsg.messages.findIndex(f => f.channelId == msg.channel.id)
-                    lastMsg.messages[msgInd].msg = msg.author.id
+                    let msgInd = lastMsg.messages.findIndex(f => f.channelId == msg.channel.id);
+                    lastMsg.messages[msgInd].msg = msg.author.id;
                 }
             } else {
 
@@ -70,13 +57,10 @@ module.exports = {
                     msg: msg.author.id
                 });
             };
-            
 
             let lastmsgdb = (await getFromDB(secret.sql.database.views.lastMsg)).rows.filter(f => f.key == msg.guild.id)[0];
             let _rev3 = (await getDB(lastmsgdb.id))._rev || false;
             await pushToDB({ _id: lastmsgdb.id, _rev: _rev3, data: lastMsg, isLastMsg: true });
-            
-
 
             if ((await getFromDB(secret.sql.database.views.guilds)).rows.filter(f => f.key == msg.guild.id).length == 0) {
                 console.log(`gSave not detected -- karma.js`)
