@@ -20,11 +20,15 @@ module.exports = {
 
         if (gSave.isCakeDays) {
             gSave.isCakeDays = false
-            msg.reply({ content: 'Disabled Cake Days.', ephemeral: true })
+            msg.reply({ content: 'Disabled Cake Days.'}).then(reply => {
+                setTimeout(() => { reply.delete(); msg.delete() }, 10000)
+            })
         }
         else {
             gSave.isCakeDays = true
-            msg.reply({ content: 'Enabled Cake Days.', ephemeral: true })
+            msg.reply({ content: 'Enabled Cake Days.'}).then(reply => {
+                setTimeout(() => { reply.delete(); msg.delete() }, 10000)
+            })
         }
 
         let guildsdb = (await getFromDB(secret.sql.database.views.guilds)).rows.filter(f => f.key == gSave.id)[0];

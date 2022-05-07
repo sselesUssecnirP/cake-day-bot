@@ -4,15 +4,15 @@ const db = require('nano')(secret.sql.url.replace(/{access}/, `${secret.sql.user
 
 module.exports = {
     // Name of the command (legacy)
-    name: "blockchannel",
+    name: "unblockchannel",
     // Category of the command
     category: "moderation",
     // Description of the command
     description: "Stops the bot from do karma/cake day stuff in the specified channel.",
     // Other calls for the command
-    aliases: ["bc", "bchannel", "blockc"],
+    aliases: ["ubc", "ubchannel", "ublockc"],
     // The way to use the command
-    usage: "cdb!bc <channel_id | channel_mention>",
+    usage: "cdb!ubc <channel_id | channel_mention>",
     // The run function of the command
     run: async (client, msg, args) => {
 
@@ -20,16 +20,17 @@ module.exports = {
         let testch = /<#(\d+)>/;
 
         if (testch.test(args[0])) args[0] = args[0].replace(testch, `$1`);
+
         let channel = msg.guild.channels.cache.get(args[0]) || undefined;
         let isChannel;
-
         if (channel)
             if (channel.id == args[0])
                 isChannel = true;
 
         if (gSave) {
             if (isChannel) {
-                gSave.exemptChannels.push(args[0])
+                let ind = gSave.exemptChannels.findIndex(f => f == channel.id);
+                gSave.exemptChannels.splice(ind, 1)
 
                 let guildsdb = (await getFromDB(secret.sql.database.views.guilds)).rows.filter(f => f.key == gSave.id)[0];
                 let _rev = (await db.get(guildsdb.id))._rev;
