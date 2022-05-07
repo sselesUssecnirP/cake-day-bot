@@ -1,6 +1,6 @@
-const { getFromDB, pushToDB, getDB } = require('../../../functions/funcs/database');
-const secret = require('../../../saves/config/secret.json');
-const config = require('../../../saves/config/config.json');
+const { getFromDB, pushToDB, getDB } = require('../../../../functions/funcs/database');
+const secret = require('../../../../saves/config/secret.json');
+const config = require('../../../../saves/config/config.json');
 
 module.exports = {
     // Name of the command (legacy)
