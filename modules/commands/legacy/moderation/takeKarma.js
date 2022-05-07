@@ -20,7 +20,7 @@ module.exports = {
 
         if (testuser.test(args[0])) args[0] = args[0].replace(testuser, `$1`);
         
-        let user = msg.guild.members.cache.get(user)
+        let user = msg.guild.members.cache.get(args[0])
         let isPositive;
 
         if (user && args[1]) {
