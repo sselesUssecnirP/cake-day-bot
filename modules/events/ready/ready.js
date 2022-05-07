@@ -25,16 +25,16 @@ module.exports = {
                     
                     mSaves.rows.forEach(mSave => {
                         if (new Date(mSave.value.deleteDate) <= new Date()) {
-                            let _rev = (await db.get(mSave.id))._rev;
-                            db.destroy(mSave.id, _rev);
+                            //let _rev = (await db.get(mSave.id))._rev;
+                            //db.destroy(mSave.id, _rev);
                         }
                     });
      
                 }
             ]
 
-            setInterval(periodic[0], 3.6e+6)
-            periodic[0]();
+            //setInterval(periodic[0], 3.6e+6)
+            //periodic[0]();
         });
     }
 }
