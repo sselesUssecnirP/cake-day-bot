@@ -19,8 +19,7 @@ module.exports = {
         let uGSave = uSave.guildCakeDays.filter(s => s.guildId == msg.guild.id)[0];
 
         msg.reply({
-            content: `Your karma is: +/-${uGSave.karma}, +${uGSave.posKarma}, -${uGSave.negKarma}\nYour Bot karma is: +/-${uSave.karma}, +${uSave.posKarma}, -${uSave.negKarma}`,
-            ephemeral: true
+            content: `Your karma is: +/-${uGSave.karma}, +${uGSave.posKarma}, -${uGSave.negKarma}\nYour Bot karma is: +/-${uSave.karma}, +${uSave.posKarma}, -${uSave.negKarma}`
         });
     }
 };

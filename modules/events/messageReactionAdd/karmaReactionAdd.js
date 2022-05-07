@@ -1,4 +1,4 @@
-const { getFromDB, pushToDB } = require('../../../functions/funcs/basic');
+const { getFromDB, pushToDB } = require('../../../functions/funcs/database');
 const secret = require('../../../saves/config/secret.json');
 const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use(secret.sql.database.name);
 const config = require('../../../saves/config/config.json')

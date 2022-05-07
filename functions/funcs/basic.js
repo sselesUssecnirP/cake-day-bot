@@ -82,28 +82,6 @@ const func = {
   }
 
   return arg;
-  },
-  /**
-   * @name getFromDB
-   * @param  {Object} opts { design: '', view: '' }
-   * @returns 
-   */
-  getFromDB: async (opts) => {
-    const secret = require('../../saves/config/secret.json');
-    const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use(secret.sql.database.name);
-    let body = await db.view(opts.design, opts.view);
-    return body;
-
-  },
-  /**
-   * @name pushToDB
-   * @param  {Object} opts { _id: '', _rev: '', data: {} }
-   */
-  pushToDB: async (opts) => {
-    const secret = require('../../saves/config/secret.json');
-    const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use(secret.sql.database.name);
-    db.insert({ _id: opts._id, _rev: opts._rev, data: opts.data });
-
   }
 }
 

@@ -124,10 +124,6 @@ module.exports = {
                 uSave.guildCakeDays.push({guildId: msg.guild.id, guildCakeDay: msg.member.joinedAt, cakeDayMsg: false, karma: 0, negKarma: 0, posKarma: 0});
             }
 
-            if (uSave.karmaAdd) {
-                delete uSave.karmaAdd;
-            }
-
             let mSave = {
                 msgId: msg.id,
                 deleteDate: new Date().setDate(new Date().getDate() + 1)
