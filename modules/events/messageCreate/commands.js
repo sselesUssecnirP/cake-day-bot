@@ -18,20 +18,27 @@ module.exports = {
 
             if (msg.content.toLowerCase().startsWith(config.prefix)) {
 
-                console.log(`Command Received`)
+                console.log(`Command Received`);
 
                 let args = msg.content.slice(config.prefix.length).split(/ +/g);
                 let command = args.shift();
                 let cmd = await client.lcommands.get(command);
                 
-                console.log(`Arguments: ${args}Command: ${command}`)
+                console.log(`Arguments: ${args}Command: ${command}`);
 
                 if (command.length === 0) return;
 
                 if (!cmd)
                     cmd = await client.commands.get(await client.aliases.get(command));
-            
-                if (cmd.category !== 'owner' || cmd.category !== 'moderation')
+                
+                if (!cmd) {
+                    msg.channel.send({ content: `<@${msg.author.id}> Your command provided was invalid.`}).then(message => {
+                        setTimeout(() => { message.delete(); msg.delete() }, 5000);
+                    });
+                    return;
+                };
+                
+                if ( cmd.category !== 'owner' || cmd.category !== 'moderation')
                     cmd.run(client, msg, args);
                 else if (cmd.category == 'moderation') 
                     if (msg.member.permissions.has('MANAGE_GUILD', true) || config.approved.some(i => i == msg.author.id))
@@ -39,10 +46,6 @@ module.exports = {
                 else if (cmd.category == 'owner')
                     if (msg.author.id == config.owner)
                         cmd.run(client, msg, args);
-                else {
-                    let reply = await msg.reply(`Your command provided was invalid.`);
-                    setTimeout(() => reply.delete(), 5000);
-                };
             }
         });
     }

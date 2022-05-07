@@ -20,11 +20,15 @@ module.exports = {
 
         if (gSave.isKarma) {
             gSave.isKarma = false
-            msg.reply({ content: 'Disabled Karma.', ephemeral: true })
+            msg.reply({ content: 'Disabled Karma.'}).then(reply => {
+                setTimeout(() => { reply.delete(); msg.delete() }, 10000)
+            })
         }
         else {
             gSave.isKarma = true
-            msg.reply({ content: 'Enabled Karma.', ephemeral: true })
+            msg.reply({ content: 'Enabled Karma.'}).then(reply => {
+                setTimeout(() => { reply.delete(); msg.delete() }, 10000)
+            })
         }
         
         let guildsdb = (await getFromDB(secret.sql.database.views.guilds)).rows.filter(f => f.key == gSave.id)[0];
