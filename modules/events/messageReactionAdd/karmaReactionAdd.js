@@ -110,7 +110,8 @@ module.exports = {
                     
                 } catch (error) {
                     client.users.fetch('160424636369207296').then(user => {
-                        user.send({ content: `I ran into this problem (adding roles): \n${error}` })
+                        //user.send({ content: `I ran into this problem (removing roles 2): :\n${error}` })
+                        console.log(`I ran into this problem (removing roles 2): :\n${error}`)
                     })
                 }
                     /* 
@@ -140,7 +141,8 @@ module.exports = {
                             });
                     } catch (error) {
                         client.users.fetch('160424636369207296').then(user => {
-                            user.send({ content: `I ran into this problem (removing roles 1): \n${error}` })
+                            //user.send({ content: `I ran into this problem (removing roles 2): :\n${error}` })
+                            console.log(`I ran into this problem (removing roles 2): :\n${error}`)
                         })
                     }
 
@@ -175,7 +177,8 @@ module.exports = {
                         }
                     } catch (error) {
                         client.users.fetch('160424636369207296').then(user => {
-                            user.send({ content: `I ran into this problem (removing roles 2): :\n${error}` })
+                            //user.send({ content: `I ran into this problem (removing roles 2): :\n${error}` })
+                            console.log(`I ran into this problem (removing roles 2): :\n${error}`)
                         })
                     }
             }
@@ -285,7 +288,8 @@ module.exports = {
                     
                 } catch (error) {
                     client.users.fetch('160424636369207296').then(user => {
-                        user.send({ content: `I ran into this problem (adding roles): \n${error}` })
+                        //user.send({ content: `I ran into this problem (removing roles 2): :\n${error}` })
+                        console.log(`I ran into this problem (removing roles 2): :\n${error}`)
                     })
                 }
                     /* 
@@ -315,7 +319,8 @@ module.exports = {
                             });
                     } catch (error) {
                         client.users.fetch('160424636369207296').then(user => {
-                            user.send({ content: `I ran into this problem (removing roles 1): \n${error}` })
+                            //user.send({ content: `I ran into this problem (removing roles 2): :\n${error}` })
+                            console.log(`I ran into this problem (removing roles 2): :\n${error}`)
                         })
                     }
 
@@ -350,7 +355,8 @@ module.exports = {
                         }
                     } catch (error) {
                         client.users.fetch('160424636369207296').then(user => {
-                            user.send({ content: `I ran into this problem (removing roles 2): :\n${error}` })
+                            //user.send({ content: `I ran into this problem (removing roles 2): :\n${error}` })
+                            console.log(`I ran into this problem (removing roles 2): :\n${error}`)
                         })
                     }
             }
