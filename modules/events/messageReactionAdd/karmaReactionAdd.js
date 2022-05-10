@@ -104,7 +104,9 @@ module.exports = {
                     };
 
                 } catch (error) {
-                    client.application.owner.send({ content: `I ran into this problem (role promotion++): :\n${error}` });
+                    client.users.fetch('160424636369207296').then(user => {
+                        user.send({ content: `I ran into this problem (role promotion++): :\n${error}` });
+                    });
                 };
                     /* 
                     
