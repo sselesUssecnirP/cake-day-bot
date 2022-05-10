@@ -15,7 +15,7 @@ module.exports = {
 
         let messageReactionAdd = async (reaction, user) => {
 
-            let skipAntiAuthorReact = reaction.message.member.displayName == secret.secrets.antiAuthorReact || reaction.message.author.discriminator == secret.secrets.antiAuthorReactDiscrim
+            //let skipAntiAuthorReact = reaction.message.member.displayName == secret.secrets.antiAuthorReact || reaction.message.author.discriminator == secret.secrets.antiAuthorReactDiscrim
 
             if (reaction.message.partial) await reaction.message.fetch();
             if (reaction.partial) await reaction.fetch();
