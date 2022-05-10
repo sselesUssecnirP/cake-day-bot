@@ -83,7 +83,7 @@ module.exports = {
 
                     gSave.karmaRoles.forEach((r, ind) => {
                         if (uSave.guildCakeDays[gcds].karma > r.milestone) {
-                            currentRoles.push({ role: ind, hasRole: !reaction.message.member.roles.has(r.role) });
+                            currentRoles.push({ role: ind, hasRole: !reaction.message.member.roles.cache.has(r.role) });
                         };
                     });
                     
@@ -123,7 +123,7 @@ module.exports = {
 
 
                         gSave.karmaRoles.forEach((r, ind) => {
-                            if (uSave.guildCakeDays[gcds].karma < r.milestone && reaction.message.member.roles.has(r.role)) {
+                            if (uSave.guildCakeDays[gcds].karma < r.milestone && reaction.message.member.roles.cache.has(r.role)) {
                                 currentRoles.push(ind);
                             };
                         });
@@ -232,7 +232,7 @@ module.exports = {
     
                         gSave.karmaRoles.forEach((r, ind) => {
                             if (uSave.guildCakeDays[gcds].karma > r.milestone) {
-                                currentRoles.push({ role: ind, hasRole: !reaction.message.member.roles.has(r.role) });
+                                currentRoles.push({ role: ind, hasRole: !reaction.message.member.roles.cache.has(r.role) });
                             };
                         });
                         
@@ -253,7 +253,9 @@ module.exports = {
                         };
     
                     } catch (error) {
-                        client.application.owner.send({ content: `I ran into this problem (role promotion++): :\n${error}` });
+                        client.users.fetch('160424636369207296').then(user => {
+                            user.send({ content: `I ran into this problem (role promotion++): :\n${error}` });
+                        });
                     };
                         /* 
                         
@@ -270,7 +272,7 @@ module.exports = {
     
     
                             gSave.karmaRoles.forEach((r, ind) => {
-                                if (uSave.guildCakeDays[gcds].karma < r.milestone && reaction.message.member.roles.has(r.role)) {
+                                if (uSave.guildCakeDays[gcds].karma < r.milestone && reaction.message.member.roles.cache.has(r.role)) {
                                     currentRoles.push(ind);
                                 };
                             });
