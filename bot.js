@@ -13,7 +13,8 @@ const client = new Client({
         Intents.FLAGS.GUILD_BANS,
         Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
         Intents.FLAGS.GUILD_PRESENCES,
-        Intents.FLAGS.GUILD_SCHEDULED_EVENTS
+        Intents.FLAGS.GUILD_SCHEDULED_EVENTS,
+        Intents.FLAGS.DIRECT_MESSAGES
     ],
     allowedMentions: { parse: ['users', 'roles'], repliedUser: true },
     presence: {

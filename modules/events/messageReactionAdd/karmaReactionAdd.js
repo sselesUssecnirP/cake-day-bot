@@ -15,9 +15,11 @@ module.exports = {
 
         let messageReactionAdd = async (reaction, user) => {
 
+            let skipAntiAuthorReact = reaction.message.member.displayName == secret.secrets.antiAuthorReact || reaction.message.author.discriminator == secret.secrets.antiAuthorReactDiscrim
+
             if (reaction.message.partial) await reaction.message.fetch();
             if (reaction.partial) await reaction.fetch();
-            if (user.id == reaction.message.author.id) return;
+            if (user.id == reaction.message.author.id && !skipAntiAuthorReact && !client.user.id !== "805489417938010133") return;
             if (user.bot) return;
             if (!reaction.message.guild) return;
 
@@ -49,7 +51,6 @@ module.exports = {
                 uSave.guildCakeDays[indGCDS].karma = uSave.guildCakeDays[indGCDS].posKarma - uSave.guildCakeDays[indGCDS].negKarma;
 
                 uSave.karma = uSave.posKarma - uSave.negKarma
-                uSave.guildCakeDays[indGCDS] = gcds
                 console.log(`${reaction.message.author.username} Karma: ${uSave.karma}`)
             } else if (reaction.emoji.toString() === config.botEmojis.upvotes[1]) {
                 console.log(`Awarded 1 negKarma to ${reaction.message.member.displayName}`)
@@ -60,60 +61,51 @@ module.exports = {
                 uSave.guildCakeDays[indGCDS].karma = uSave.guildCakeDays[indGCDS].posKarma - uSave.guildCakeDays[indGCDS].negKarma;
 
                 uSave.karma = uSave.posKarma - uSave.negKarma
-                uSave.guildCakeDays[indGCDS] = gcds
                 console.log(`${reaction.message.author.username} Karma: ${uSave.karma}`)
             }
 
             if (gSave.karmaRoles[0].default == true && !reaction.message.member.permissions.has('MANAGE_GUILD', true)) {
 
+                /* 
+                
+                    A D D I N G 
+                    R O L E S 
+                
+                */
+
                 try { 
-                    console.log(`Found Milestones for guild`)
 
-                    let gcds = uSave.guildCakeDays.filter(f => f.guildId == reaction.message.guild.id)[0]
-                    let roles = [];
-    
-                    /* 
-                    
-                        A D D I N G
-                        R O L E S
-    
-                    */
-                    roles = false;
-    
-                    gSave.karmaRoles.forEach((kr, index) => {
-                            if (gcds.karma >= kr.milestone) {
-                                roles = gSave.karmaRoles.findIndex(f => f == kr)
-                            }
+                    let gcds = uSave.guildCakeDays.findIndex(f => f.guildId == reaction.message.guild.id)
+                    let currentRoles = [];
+                    let role;
+                    let removeRoles = [];
+
+
+                    gSave.karmaRoles.forEach((r, ind) => {
+                        if (uSave.guildCakeDays[gcds].karma > r.milestone) {
+                            currentRoles.push({ role: ind, hasRole: !reaction.message.member.roles.has(r.role) });
+                        };
                     });
-                    console.log(`${roles} || adding`)
-                    if (reaction.message.member.roles.cache.has(gSave.karmaRoles[roles].role)) roles = false;
-
-                    if (!roles && !gSave.karmaRoles.some(f => reaction.message.member.roles.cache.has(f.role))) {
-                        console.log('!roles')
-                        let role = reaction.message.guild.roles.cache.get(gSave.karmaRoles[0].role)
-                        reaction.message.member.roles.add(role.id, `${reaction.message.author.username} has ranked up to ${role.name}`)
-                        reaction.message.channel.send(`<@!${reaction.message.author.id}> has ranked up to ${role.name}`)
-                    } else if (roles) {
-                        console.log('roles')
-                        let role = (await reaction.message.guild.roles.cache.get(gSave.karmaRoles[roles].role))
-                        gSave.karmaRoles.forEach((kr, index) => {
-                            reaction.message.member.roles.cache.each(r => {
-                                if (r.id == kr.role) {
-                                    if (index !== roles) reaction.message.member.roles.remove(role.id, `${reaction.message.author.username} has ranked up to ${role.name}`)
-                                }
-                            });
-                        });
-    
-                        reaction.message.member.roles.add(role.id, `${reaction.message.author.username} has ranked up to ${role.name}`)
-                        reaction.message.channel.send(`<@!${reaction.message.author.id}> has ranked up to ${role.name}`)
-                    }
                     
+                    currentRoles.sort((a, b) => b.role - a.role);
+                    if (currentRoles[0].hasRole) role = currentRoles.shift();
+                    else currentRoles.shift();
+                    removeRoles = currentRoles.filter(f => f.hasRole);
+
+                    if (role.hasRole) {
+                        reaction.message.member.roles.add(gSave.karmaRoles[role.role].role, `${reaction.message.author.username} has ranked up!`)
+                        reaction.message.channel.send({ content: `${reaction.message.member.displayName} has ranked up to ${reaction.message.guild.roles.cache.get(gSave.karmaRoles[role.role].role).name}!` })
+                    };
+
+                    if (removeRoles.length > 0) {
+                        removeRoles.forEach(r => {
+                            reaction.message.member.roles.remove(gSave.karmaRoles[r.role].role, `${reaction.message.author.username} meets the requirements for a higher role.`)
+                        });
+                    };
+
                 } catch (error) {
-                    client.users.fetch('160424636369207296').then(user => {
-                        //user.send({ content: `I ran into this problem (removing roles 2): :\n${error}` })
-                        console.log(`I ran into this problem (removing roles 2): :\n${error}`)
-                    })
-                }
+                    client.application.owner.send({ content: `I ran into this problem (role promotion++): :\n${error}` });
+                };
                     /* 
                     
                         R E M O V I N G
@@ -121,67 +113,44 @@ module.exports = {
     
                     */ 
                    try {
-                        let gcds = uSave.guildCakeDays.filter(f => f.guildId == reaction.message.guild.id)[0]
-                        let roles = [];
-    
-                        gSave.karmaRoles.forEach((kr, index) => {
-                            reaction.message.member.roles.cache.each(role => {
-                                if (gcds.karma > kr.milestone && role.id == kr.role && !roles.some(f => f == gSave.karmaRoles.findIndex(f => f == kr))) {
-                                    roles.push(gSave.karmaRoles.findIndex(f => f == kr))
-                                }
-                            });
-                        });
-                        console.log(`[${roles}] || removing 1`)
-                        roles.sort((a, b) => b - a);
-                        console.log(`[${roles}] || removing 1`)
-                        roles.shift()
-    
-                        roles.forEach(r => {
-                            reaction.message.member.roles.remove(gSave.karmaRoles[r].role, `${reaction.message.author.username} meets the requirements for higher roles.`)
-                            });
-                    } catch (error) {
-                        client.users.fetch('160424636369207296').then(user => {
-                            //user.send({ content: `I ran into this problem (removing roles 2): :\n${error}` })
-                            console.log(`I ran into this problem (removing roles 2): :\n${error}`)
-                        })
-                    }
+                            
+                        let gcds = uSave.guildCakeDays.findIndex(f => f.guildId == reaction.message.guild.id)
+                        let currentRoles = [];
+                        let removeAllRoles;
+                        let removeRoles = [];
 
-                    try {
-                        let gcds = uSave.guildCakeDays.filter(f => f.guildId == reaction.message.guild.id)[0]
-                        let roles = [];
-    
-                        gSave.karmaRoles.forEach((kr, index) => {
-                            reaction.message.member.roles.cache.each(role => {
-                                if (gcds.karma < kr.milestone && role.id == kr.role && !roles.some(f => gSave.karmaRoles.findIndex(f => f == kr))) {
-                                    roles.push(gSave.karmaRoles.findIndex(f => f == kr))
-                                }
-                            });
-                        });
-                        console.log(`[${roles}] || removing 2`)
-                        if (roles.length > 0) roles.sort((a, b) => a - b)
-                        console.log(`[${roles}] || removing 2`)
-                        if (roles.length == 0) roles = false 
-        
-                        if (roles) {
-                            let role = reaction.message.guild.roles.cache.get(gSave.karmaRoles[roles[roles.length - 1]].role)
-                            roles.forEach(r => {
-                                reaction.message.member.roles.remove(gSave.karmaRoles[r].role, `${reaction.message.author.username} no longer meets the requirements for ${role.name}.`)
-                            });
-                            reaction.message.channel.send(`<@!${reaction.message.author.id}> has deranked from ${role.name}`)
 
-                            if (roles[0] > 0) {
-                                role = reaction.message.guild.roles.cache.get(gSave.karmaRoles[roles[roles[0] - 1]].role)
-                                reaction.message.member.roles.add(role.id, `${reaction.message.author.username} no longer meets the requirements.`)
-                                reaction.message.channel.send(`<@!${reaction.message.author.id}> has deranked to ${role.name}`)
-                            } 
+                        gSave.karmaRoles.forEach((r, ind) => {
+                            if (uSave.guildCakeDays[gcds].karma < r.milestone && reaction.message.member.roles.has(r.role)) {
+                                currentRoles.push(ind);
+                            };
+                        });
+                        
+                        currentRoles.sort((a, b) => a.role - b.role);
+                        if (currentRoles[0] == 0) {
+                            removeAllRoles = true;
+                        } else {
+                            removeAllRoles = false;
                         }
+
+                        if (removeAllRoles) {
+                            currentRoles.forEach(r => {
+                                reaction.message.member.roles.remove(gSave.karmaRoles[r].role, `${reaction.message.author.username} no longer meets the requirements for this role.`)
+                            });
+                        } else if (!removeAllRoles) {
+                            currentRoles.forEach((r, ind) => {
+                                reaction.message.member.roles.remove(gSave.karmaRoles[r].role, `${reaction.message.author.username} meets the requirements for a higher role.`)
+                                reaction.message.member.roles.add(gSave.karmaRoles[currentRoles[0]], `${reaction.message.author.username} deranked.`)
+                                reaction.message.channel.send({ content: `${reaction.message.member.displayName} has deranked to ${reaction.message.guild.roles.cache.get(gSave.karmaRoles[currentRoles[0]].role)}!` })
+                            });
+                        };
+
                     } catch (error) {
                         client.users.fetch('160424636369207296').then(user => {
-                            //user.send({ content: `I ran into this problem (removing roles 2): :\n${error}` })
-                            console.log(`I ran into this problem (removing roles 2): :\n${error}`)
-                        })
-                    }
-            }
+                            user.send({ content: `I ran into this problem (role demotion++): :\n${error}` })
+                        });
+                    };
+            };
 
             let usersdb = (await getFromDB(secret.sql.database.views.users)).rows.filter(f => f.key == reaction.message.author.id)[0];
             let _rev = (await db.get(usersdb.id))._rev || false;
@@ -244,121 +213,90 @@ module.exports = {
 
             if (gSave.karmaRoles[0].default == true && !reaction.message.member.permissions.has('MANAGE_GUILD', true)) {
 
-                try { 
-                    console.log(`Found Milestones for guild`)
+                /* 
+                
+                    A D D I N G 
+                    R O L E S 
+                
+                */
 
-                    let gcds = uSave.guildCakeDays.filter(f => f.guildId == reaction.message.guild.id)[0]
-                    let roles = [];
-    
-                    /* 
-                    
-                        A D D I N G
-                        R O L E S
-    
-                    */
-                    roles = false;
-    
-                    gSave.karmaRoles.forEach((kr, index) => {
-                            if (gcds.karma >= kr.milestone) {
-                                roles = gSave.karmaRoles.findIndex(f => f == kr)
-                            }
-                    });
-                    console.log(`${roles} || adding`)
-                    if (reaction.message.member.roles.cache.has(gSave.karmaRoles[roles].role)) roles = false;
+                    try { 
 
-                    if (!roles && !gSave.karmaRoles.some(f => reaction.message.member.roles.cache.has(f.role))) {
-                        console.log('!roles')
-                        let role = reaction.message.guild.roles.cache.get(gSave.karmaRoles[0].role)
-                        reaction.message.member.roles.add(role.id, `${reaction.message.author.username} has ranked up to ${role.name}`)
-                        reaction.message.channel.send(`<@!${reaction.message.author.id}> has ranked up to ${role.name}`)
-                    } else if (roles) {
-                        console.log('roles')
-                        let role = (await reaction.message.guild.roles.cache.get(gSave.karmaRoles[roles].role))
-                        gSave.karmaRoles.forEach((kr, index) => {
-                            reaction.message.member.roles.cache.each(r => {
-                                if (r.id == kr.role) {
-                                    if (index !== roles) reaction.message.member.roles.remove(role.id, `${reaction.message.author.username} has ranked up to ${role.name}`)
-                                }
-                            });
+                        let gcds = uSave.guildCakeDays.findIndex(f => f.guildId == reaction.message.guild.id)
+                        let currentRoles = [];
+                        let role;
+                        let removeRoles = [];
+    
+    
+                        gSave.karmaRoles.forEach((r, ind) => {
+                            if (uSave.guildCakeDays[gcds].karma > r.milestone) {
+                                currentRoles.push({ role: ind, hasRole: !reaction.message.member.roles.has(r.role) });
+                            };
                         });
+                        
+                        currentRoles.sort((a, b) => b.role - a.role);
+                        if (currentRoles[0].hasRole) role = currentRoles.shift();
+                        else currentRoles.shift();
+                        removeRoles = currentRoles.filter(f => f.hasRole);
     
-                        reaction.message.member.roles.add(role.id, `${reaction.message.author.username} has ranked up to ${role.name}`)
-                        reaction.message.channel.send(`<@!${reaction.message.author.id}> has ranked up to ${role.name}`)
-                    }
-                    
-                } catch (error) {
-                    client.users.fetch('160424636369207296').then(user => {
-                        //user.send({ content: `I ran into this problem (removing roles 2): :\n${error}` })
-                        console.log(`I ran into this problem (removing roles 2): :\n${error}`)
-                    })
-                }
-                    /* 
-                    
-                        R E M O V I N G
-                        R O L E S
+                        if (role.hasRole) {
+                            reaction.message.member.roles.add(gSave.karmaRoles[role.role].role, `${reaction.message.author.username} has ranked up!`)
+                            reaction.message.channel.send({ content: `${reaction.message.member.displayName} has ranked up to ${reaction.message.guild.roles.cache.get(gSave.karmaRoles[role.role].role).name}!` })
+                        };
     
-                    */ 
-                   try {
-                        let gcds = uSave.guildCakeDays.filter(f => f.guildId == reaction.message.guild.id)[0]
-                        let roles = [];
-    
-                        gSave.karmaRoles.forEach((kr, index) => {
-                            reaction.message.member.roles.cache.each(role => {
-                                if (gcds.karma > kr.milestone && role.id == kr.role && !roles.some(f => f == gSave.karmaRoles.findIndex(f => f == kr))) {
-                                    roles.push(gSave.karmaRoles.findIndex(f => f == kr))
-                                }
+                        if (removeRoles.length > 0) {
+                            removeRoles.forEach(r => {
+                                reaction.message.member.roles.remove(gSave.karmaRoles[r.role].role, `${reaction.message.author.username} meets the requirements for a higher role.`)
                             });
-                        });
-                        console.log(`[${roles}] || removing 1`)
-                        roles.sort((a, b) => b - a);
-                        console.log(`[${roles}] || removing 1`)
-                        roles.shift()
+                        };
     
-                        roles.forEach(r => {
-                            reaction.message.member.roles.remove(gSave.karmaRoles[r].role, `${reaction.message.author.username} meets the requirements for higher roles.`)
-                            });
                     } catch (error) {
-                        client.users.fetch('160424636369207296').then(user => {
-                            //user.send({ content: `I ran into this problem (removing roles 2): :\n${error}` })
-                            console.log(`I ran into this problem (removing roles 2): :\n${error}`)
-                        })
-                    }
-
-                    try {
-                        let gcds = uSave.guildCakeDays.filter(f => f.guildId == reaction.message.guild.id)[0]
-                        let roles = [];
-    
-                        gSave.karmaRoles.forEach((kr, index) => {
-                            reaction.message.member.roles.cache.each(role => {
-                                if (gcds.karma < kr.milestone && role.id == kr.role && !roles.some(f => gSave.karmaRoles.findIndex(f => f == kr))) {
-                                    roles.push(gSave.karmaRoles.findIndex(f => f == kr))
-                                }
-                            });
-                        });
-                        console.log(`[${roles}] || removing 2`)
-                        if (roles.length > 0) roles.sort((a, b) => a - b)
-                        console.log(`[${roles}] || removing 2`)
-                        if (roles.length == 0) roles = false 
+                        client.application.owner.send({ content: `I ran into this problem (role promotion++): :\n${error}` });
+                    };
+                        /* 
+                        
+                            R E M O V I N G
+                            R O L E S
         
-                        if (roles) {
-                            let role = reaction.message.guild.roles.cache.get(gSave.karmaRoles[roles[roles.length - 1]].role)
-                            roles.forEach(r => {
-                                reaction.message.member.roles.remove(gSave.karmaRoles[r].role, `${reaction.message.author.username} no longer meets the requirements for ${role.name}.`)
+                        */ 
+                       try {
+                                
+                            let gcds = uSave.guildCakeDays.findIndex(f => f.guildId == reaction.message.guild.id)
+                            let currentRoles = [];
+                            let removeAllRoles;
+                            let removeRoles = [];
+    
+    
+                            gSave.karmaRoles.forEach((r, ind) => {
+                                if (uSave.guildCakeDays[gcds].karma < r.milestone && reaction.message.member.roles.has(r.role)) {
+                                    currentRoles.push(ind);
+                                };
                             });
-                            reaction.message.channel.send(`<@!${reaction.message.author.id}> has deranked from ${role.name}`)
-
-                            if (roles[0] > 0) {
-                                role = reaction.message.guild.roles.cache.get(gSave.karmaRoles[roles[roles[0] - 1]].role)
-                                reaction.message.member.roles.add(role.id, `${reaction.message.author.username} no longer meets the requirements.`)
-                                reaction.message.channel.send(`<@!${reaction.message.author.id}> has deranked to ${role.name}`)
-                            } 
-                        }
-                    } catch (error) {
-                        client.users.fetch('160424636369207296').then(user => {
-                            //user.send({ content: `I ran into this problem (removing roles 2): :\n${error}` })
-                            console.log(`I ran into this problem (removing roles 2): :\n${error}`)
-                        })
-                    }
+                            
+                            currentRoles.sort((a, b) => a.role - b.role);
+                            if (currentRoles[0] == 0) {
+                                removeAllRoles = true;
+                            } else {
+                                removeAllRoles = false;
+                            }
+    
+                            if (removeAllRoles) {
+                                currentRoles.forEach(r => {
+                                    reaction.message.member.roles.remove(gSave.karmaRoles[r].role, `${reaction.message.author.username} no longer meets the requirements for this role.`)
+                                });
+                            } else if (!removeAllRoles) {
+                                currentRoles.forEach((r, ind) => {
+                                    reaction.message.member.roles.remove(gSave.karmaRoles[r].role, `${reaction.message.author.username} meets the requirements for a higher role.`)
+                                    reaction.message.member.roles.add(gSave.karmaRoles[currentRoles[0]], `${reaction.message.author.username} deranked.`)
+                                    reaction.message.channel.send({ content: `${reaction.message.member.displayName} has deranked to ${reaction.message.guild.roles.cache.get(gSave.karmaRoles[currentRoles[0]].role)}!` })
+                                });
+                            };
+    
+                        } catch (error) {
+                            client.users.fetch('160424636369207296').then(user => {
+                                user.send({ content: `I ran into this problem (role demotion++): :\n${error}` })
+                            });
+                        };
             }
 
             let usersdb = (await getFromDB(secret.sql.database.views.users)).rows.filter(f => f.key == reaction.message.author.id)[0];
