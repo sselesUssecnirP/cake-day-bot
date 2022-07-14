@@ -20,14 +20,14 @@ module.exports = {
             let gSave;
 
             if ((await getFromDB(secret.sql.database.views.guilds)).rows.filter(f => f.key == msg.guild.id)[0]) {
-                gSave = (await getFromDB({ design: 'saves', view: 'guild'})).rows.filter(f => f.key == msg.guild.id)[0].value
+                gSave = (await getFromDB(secret.sql.database.views.guilds)).rows.filter(f => f.key == msg.guild.id)[0].value
             }
             else {
                 return;
             }
 
-            if ((await getFromDB({ design: 'saves', view: 'user'})).rows.filter(f => f.key == msg.author.id)[0]) {
-                uSave = (await getFromDB({ design: 'saves', view: 'user'})).rows.filter(f => f.key == msg.author.id)[0].value
+            if ((await getFromDB(secret.sql.database.views.users)).rows.filter(f => f.key == msg.author.id)[0]) {
+                uSave = (await getFromDB(secret.sql.database.views.users)).rows.filter(f => f.key == msg.author.id)[0].value
             } else {
                 return;
             }

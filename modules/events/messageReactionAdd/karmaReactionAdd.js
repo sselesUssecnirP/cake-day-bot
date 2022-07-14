@@ -1,7 +1,7 @@
 const { getFromDB, pushToDB } = require('../../../functions/funcs/database');
 const secret = require('../../../saves/config/secret.json');
 const db = require('nano')(secret.sql.url.replace(/{access}/,`${secret.sql.username}:${secret.sql.password}@`)).use(secret.sql.database.name);
-const config = require('../../../saves/config/config.json')
+const config = require('../../../saves/config/config.json');
 
 module.exports = {
     // Name of the event
@@ -19,7 +19,9 @@ module.exports = {
 
             if (reaction.message.partial) await reaction.message.fetch();
             if (reaction.partial) await reaction.fetch();
-            if (user.id == reaction.message.author.id && !skipAntiAuthorReact && !client.user.id !== "805489417938010133") return;
+            if (user.id == reaction.message.author.id) return;
+            // if (!skipAntiAuthorReact) return;
+            if (!client.user.id !== "805489417938010133") return;
             if (user.bot) return;
             if (!reaction.message.guild) return;
 

@@ -2,8 +2,6 @@ const { Client, Intents } = require('discord.js');
 const token = process.env.TOKEN || require('./saves/config/secret.json').TOKEN;
 const config = require('./saves/config/config.json');
 
-const handlers = ["collections", "events", "commands"]
-
 const client = new Client({
     partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
     intents: [
@@ -29,7 +27,7 @@ const client = new Client({
     }
 });
 
-handlers.forEach(handler => {
+["collections", "events", "commands"].forEach(handler => {
     require(`./functions/handler/${handler}`)(client)
 })
 
