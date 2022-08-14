@@ -40,22 +40,22 @@ module.exports = {
             if (gSave.exemptChannels.some(i => i == msg.channel.id)) return;
 
             let curDate = formatDate()
-            curDate = curDate.split(/\//g)
-            curDate.pop()
-            curDate = curDate.join('/')
+            curDate = curDate.split('/') // i.e 7/20/2022
+            curDate.pop() // i.e [7, 20]
+            curDate = curDate.join('/') // i.e 7/20
             let cakeDay = formatDate(new Date(uSave.cakeDay));
-            cakeDay = cakeDay.split(/\//g)
-            cakeDay.pop()
-            cakeDay = cakeDay.join('/')
+            cakeDay = cakeDay.split('/') // i.e 8/30/2033
+            cakeDay.pop() // i.e [8, 30]
+            cakeDay = cakeDay.join('/') // i.e 8/30
             let gCakeDay = formatDate(new Date(uSave.guildCakeDays.filter(i => i.guildId == msg.guild.id)[0].guildCakeDay));
-            gCakeDay = gCakeDay.split(/\//g)
-            gCakeDay.pop()
-            gCakeDay = cakeDay.join('/')
+            gCakeDay = gCakeDay.split('/') // i.e 6/10/2011
+            gCakeDay.pop() // i.e [6, 10]
+            gCakeDay = cakeDay.join('/') // i.e 6/10
 
             if (curDate == cakeDay && !uSave.cakeDayMsg) {
                 msg.reply(`Happy Discord Cake Day ${msg.member.displayName}! 🍰`);
                 uSave.cakeDayMsg = true;
-            } else if (uSave.cakeDayMsg) {
+            } else if (curDate != cakeDay && uSave.cakeDayMsg) {
                 uSave.cakeDayMsg = false;
             }
 
@@ -66,7 +66,7 @@ module.exports = {
                         cd.cakeDayMsg = true;
                     }
                 });
-            } else if (uSave.guildCakeDays.filter(cd => cd.guildId == msg.guild.id)[0].cakeDayMsg) {
+            } else if (curDate != gCakeDay && uSave.guildCakeDays.filter(cd => cd.guildId == msg.guild.id)[0].cakeDayMsg) {
                 uSave.guildCakeDays.filter(cd => cd.guildId == msg.guild.id)[0].cakeDayMsg = false;
             }
 
